@@ -1,8 +1,14 @@
 "use client";
 
+import { useLogin, useRegister } from "@/hooks/useAuth";
+import { RegisterPayload } from "@/types/auth.types";
 import { useState } from "react";
 
 export default function Login() {
+
+  const { mutate: registerMutate, isPending: registerPending } = useRegister();
+  const { mutate: loginMutate, isPending: loginPending } = useLogin();
+
   const [tab, setTab] = useState<"login" | "register">("login");
   const [user, setUser] = useState({
     email: "",
@@ -10,6 +16,8 @@ export default function Login() {
     fullname: "",
     emailErr: "",
     passwordErr: "",
+    repassword: "",
+    repasswordErr: "",
     failErr: "",
   });
 
@@ -29,25 +37,82 @@ export default function Login() {
   }
 
   const login = (e: any) => {
-    e.preventDefault();
-    console.log(user);
-    if(!user.email && !user.password) {
-      setUser((state) => ({ ...state, failErr: "Please fill in all fields" }));
-      return;
-    }
+  e.preventDefault();
 
-    if(!user.email) {
-      setUser((state) => ({ ...state, emailErr: "Email is required" }));
-      return;
-    }
-
-    if(!user.password) {
-      setUser((state) => ({ ...state, passwordErr: "Password is required" }));
-      return;
-    }
-
-    setUser((state) => ({ ...state, failErr: "", emailErr: "", passwordErr: "" }));
+  if (!user.email && !user.password) {
+    setUser((state) => ({ ...state, failErr: "Please fill in all fields" }));
+    return;
   }
+
+  if (!user.email) {
+    setUser((state) => ({ ...state, emailErr: "Email is required" }));
+    return;
+  }
+
+  if (!user.password) {
+    setUser((state) => ({ ...state, passwordErr: "Password is required" }));
+    return;
+  }
+
+  setUser((state) => ({ ...state, failErr: "", emailErr: "", passwordErr: "" }));
+
+  loginMutate(
+    { email: user.email, password: user.password },
+    {
+      onSuccess: () => {
+        console.log("Logged in successfully");
+      },
+      onError: (error: any) => {
+        setUser((state) => ({
+          ...state,
+          failErr: error?.response?.data?.message ?? "Invalid email or password",
+        }));
+      },
+    }
+  );
+};
+
+const register = (e: any) => {
+  console.log("Registering user:", { email: user.email, password: user.password, fullName: user.fullname });
+
+  if (!user.fullname) {
+    setUser((state) => ({ ...state, failErr: "Full name is required" }));
+    return;
+  }
+
+  if (!user.email) {
+    setUser((state) => ({ ...state, emailErr: "Email is required" }));
+    return;
+  }
+
+  if (!user.password) {
+    setUser((state) => ({ ...state, passwordErr: "Password is required" }));
+    return;
+  }
+
+  if (user.password !== user.repassword) {
+  setUser((state) => ({ ...state, repasswordErr: "Passwords do not match" }));
+  return;
+}
+
+  setUser((state) => ({ ...state, failErr: "", emailErr: "", passwordErr: "" }));
+
+  registerMutate(
+    { email: user.email, password: user.password, fullName: user.fullname },
+    {
+      onSuccess: () => {
+        console.log("User created");
+        setTab("login");
+      },
+      onError: (error: any) => {
+        setUser((state) => ({
+          ...state,
+          failErr: error?.response?.data?.message ?? "Registration failed. Please try again.",
+        }));
+      },
+    }
+  );
+};
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-linear-to-r from-[#080810] to-[#1e1e2f]">
@@ -140,7 +205,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={login}
-                className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg"
+                className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg cursor-pointer"
               >
                 Sign In
               </button>
@@ -177,7 +242,9 @@ export default function Login() {
               <input
                 type="fullname"
                 id="fullname"
-                onChange={(e) => setUser({ ...user, fullname: e.target.value })}
+                name="fullname"
+                onChange={handleChange}
+                value={user.fullname}
                 placeholder="Enter your full name"
                 className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
               />
@@ -190,9 +257,13 @@ export default function Login() {
               <input
                 type="email"
                 id="email"
+                name="email"
+                onChange={handleChange}
+                value={user.email}
                 placeholder="Enter your email"
                 className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
               />
+              <span className="text-red-500 text-sm">{user.emailErr}</span>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -202,9 +273,13 @@ export default function Login() {
               <input
                 type="password"
                 id="password"
+                name="password"
+                onChange={handleChange}
+                value={user.password}
                 placeholder="Enter your password"
                 className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
               />
+              <span className="text-red-500 text-sm">{user.passwordErr}</span>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -214,16 +289,20 @@ export default function Login() {
               <input
                 type="password"
                 id="repassword"
+                name="repassword"
+                onChange={handleChange}
+                value={user.repassword}
                 placeholder="Confirm your password"
                 className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
               />
+              <span className="text-red-500 text-sm">{user.repasswordErr}</span>
             </div>
 
             <div>
               <button
                 type="button"
-                // onClick={onSubmit}
-                className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg"
+                onClick={register}
+                className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg cursor-pointer"
               >
                 Sign Up
               </button>
