@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { registerApi, loginApi } from "@/features/Auth/auth.api";
+import { registerApi, loginApi, verifyOTPApi } from "@/features/Auth/auth.api";
 
 export const useRegister = () => {
   return useMutation({
@@ -15,3 +15,9 @@ export const useLogin = () => {
     mutationFn: loginApi,
   });
 };
+
+export const useVerifyOTP = () => {
+  return useMutation({
+    mutationFn: verifyOTPApi,
+  });
+}

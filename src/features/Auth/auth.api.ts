@@ -1,6 +1,7 @@
 import {
   LoginPayload,
   RegisterPayload,
+  VerifyOTPPayload
 } from "@/types/auth.types";
 
 export const registerApi =
@@ -28,6 +29,25 @@ export const loginApi =
   ) => {
     const res = await fetch(
       "/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    return res.json();
+  };
+
+  export const verifyOTPApi =
+  async (
+    data: VerifyOTPPayload
+  ) => {
+    const res = await fetch(
+      "/api/auth/verifyotp",
       {
         method: "POST",
         headers: {
