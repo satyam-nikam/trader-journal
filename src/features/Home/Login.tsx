@@ -141,7 +141,7 @@ const formatTimer = (seconds: number) => {
     {
       onSuccess: () => {
         // ✅ OTP verified — redirect to dashboard
-        router.push("/api/dashboard");          // add: const router = useRouter();
+        router.push("/dashboard");          
         console.log("otp verified")
         setUser({
             email: "",

@@ -1,7 +1,5 @@
-import Login from "@/features/Home/Login";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <Login />
-  );
+  redirect("/login");
 }
