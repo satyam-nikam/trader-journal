@@ -279,7 +279,7 @@ const formatTimer = (seconds: number) => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-linear-to-r from-[#080810] to-[#1e1e2f]">
+    <div className="relative min-h-screen overflow-hidden bg-linear-to-r from-[#080810] to-[#2c2c2c]">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-size-[52px_52px]" />
 
       <div className="absolute w-160 h-160 -top-56 -left-40 bg-[radial-gradient(circle,rgba(108,71,255,0.14)_0%,transparent_70%)]" />
@@ -343,7 +343,7 @@ const formatTimer = (seconds: number) => {
                 onChange={handleChange}
                 value={user.email}
                 placeholder="Enter your email"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
+                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
               />
               <span className="text-red-500 text-sm">{user.emailErr}</span>
             </div>
@@ -359,7 +359,7 @@ const formatTimer = (seconds: number) => {
                 onChange={handleChange}
                 value={user.password}
                 placeholder="Enter your password"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
+                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
               />
               <span className="text-red-500 text-sm">{user.passwordErr}</span>
             </div>
@@ -371,7 +371,7 @@ const formatTimer = (seconds: number) => {
                   id="remember"
                   className="border border-[#ffffff0f] rounded-lg p-3 h-auto bg-white/5 cursor-pointer"
                 />
-                <p className="w-full text-sm">Remember me</p>
+                <p className="w-full text-sm text-white">Remember me</p>
               </div>
               <p
                 className="text-[#6c47ff] cursor-pointer text-sm"
@@ -410,7 +410,7 @@ const formatTimer = (seconds: number) => {
           {/* two factor auth */}
           <div className={`${tab === "2fa" ? "block" : "hidden"} space-y-4`}>
             <div>
-              <p className="text-3xl font-bold text-center">Enter OTP</p>
+              <p className="text-3xl font-bold text-center text-white">Enter OTP</p>
               <p className="text-center text-white/70 text-sm">
                 Otp is sent to your email address.
               </p>
@@ -428,7 +428,7 @@ const formatTimer = (seconds: number) => {
                     value={user.otp[index] || ""}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="border border-[#ffffff0f] rounded-lg w-12 h-12 text-center text-lg bg-white/5 placeholder:text-sm focus:outline-none focus:border-white/30"
+                    className="border border-[#ffffff0f] rounded-lg w-12 h-12 text-center text-lg bg-white/5 placeholder:text-sm text-white focus:outline-none focus:border-white/30"
                     placeholder="_"
                   />
                 ))}
@@ -438,13 +438,13 @@ const formatTimer = (seconds: number) => {
 
             <div>
               <button
-  type="button"
-  onClick={verifyOtp}   
-  disabled={verifyOtpPending}
-  className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg cursor-pointer disabled:opacity-50"
->
-  {verifyOtpPending ? "Verifying..." : "Verify OTP"}
-</button>
+                type="button"
+                onClick={verifyOtp}   
+                disabled={verifyOtpPending}
+                className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg cursor-pointer disabled:opacity-50"
+              >
+                {verifyOtpPending ? "Verifying..." : "Verify OTP"}
+              </button>
             </div>
 
             <div className="flex items-center justify-between">
@@ -494,7 +494,7 @@ const formatTimer = (seconds: number) => {
                 onChange={handleChange}
                 value={user.fullname}
                 placeholder="Enter your full name"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
+                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
               />
             </div>
 
@@ -509,7 +509,7 @@ const formatTimer = (seconds: number) => {
                 onChange={handleChange}
                 value={user.email}
                 placeholder="Enter your email"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
+                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
               />
               <span className="text-red-500 text-sm">{user.emailErr}</span>
             </div>
@@ -525,7 +525,7 @@ const formatTimer = (seconds: number) => {
                 onChange={handleChange}
                 value={user.password}
                 placeholder="Enter your password"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
+                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
               />
               <span className="text-red-500 text-sm">{user.passwordErr}</span>
             </div>
@@ -541,7 +541,7 @@ const formatTimer = (seconds: number) => {
                 onChange={handleChange}
                 value={user.repassword}
                 placeholder="Confirm your password"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm"
+                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
               />
               <span className="text-red-500 text-sm">{user.repasswordErr}</span>
             </div>
