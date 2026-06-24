@@ -57,7 +57,7 @@ const Modal: React.FC<ModalProps> = ({
 			>
 				<div
 					style={{ background: "#2c2c2c" }}
-					className="px-4 py-3 text-white flex items-center justify-between"
+					className="px-4 py-3 text-white flex items-center justify-between text-lg"
 				>
 					<div>{header}</div>
 					<button
@@ -73,7 +73,7 @@ const Modal: React.FC<ModalProps> = ({
 				<div className="p-4">{children}</div>
 
 				{footer && (
-					<div className="px-4 py-3 border-t flex justify-end">{footer}</div>
+					<div className="px-4 py-3 border-t border-[#b2b2b2] shadow-md flex justify-center">{footer}</div>
 				)}
 			</div>
 		</div>

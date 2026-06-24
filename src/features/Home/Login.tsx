@@ -128,7 +128,6 @@ const formatTimer = (seconds: number) => {
   };
 
   const verifyOtp = () => {
-  // ✅ Guard: OTP must be 4 digits
   if (!user.otp || user.otp.length < 4) {
     setUser((state) => ({ ...state, otpErr: "Please enter the 4-digit OTP" }));
     return;
@@ -140,7 +139,6 @@ const formatTimer = (seconds: number) => {
     { email: user.email, otp: user.otp },  // pass whatever your API expects
     {
       onSuccess: () => {
-        // ✅ OTP verified — redirect to dashboard
         router.push("/dashboard");          
         console.log("otp verified")
         setUser({
@@ -197,8 +195,6 @@ const formatTimer = (seconds: number) => {
 
   const handleResendOtp = () => {
   if (timer > 0) return;
-
-  // call resend OTP API here
 
   setUser((state) => ({
     ...state,
@@ -326,14 +322,14 @@ const formatTimer = (seconds: number) => {
           {/* login */}
           <div className={`${tab === "login" ? "block" : "hidden"} space-y-4`}>
             <div>
-              <p className="text-3xl font-bold text-center">Welcome Back</p>
+              <p className="text-3xl font-bold text-center text-white">Welcome Back</p>
               <p className="text-center text-white/70 text-sm">
                 Sign in to your account
               </p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="label">
+              <label htmlFor="email" className="text-sm text-white font-semibold">
                 Email Address
               </label>
               <input
@@ -349,7 +345,7 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="password" className="label">
+              <label htmlFor="password" className="text-sm text-white font-semibold">
                 Password
               </label>
               <input
@@ -477,14 +473,14 @@ const formatTimer = (seconds: number) => {
             className={`${tab === "register" ? "block" : "hidden"} space-y-4`}
           >
             <div>
-              <p className="text-3xl font-bold text-center">Create Account</p>
+              <p className="text-3xl font-bold text-center text-white">Create Account</p>
               <p className="text-center text-white/70 text-sm">
                 Sign up to get started
               </p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="fullname" className="label">
+              <label htmlFor="fullname" className="text-sm text-white font-semibold">
                 Full Name
               </label>
               <input
@@ -499,7 +495,7 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="label">
+              <label htmlFor="email" className="text-sm text-white font-semibold">
                 Email Address
               </label>
               <input
@@ -515,7 +511,7 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="password" className="label">
+              <label htmlFor="password" className="text-sm text-white font-semibold">
                 Password
               </label>
               <input
@@ -531,7 +527,7 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="repassword" className="label">
+              <label htmlFor="repassword" className="text-sm text-white font-semibold">
                 Confirm Password
               </label>
               <input

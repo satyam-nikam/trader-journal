@@ -4,6 +4,8 @@ import { useState } from "react";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { FaTrash } from "react-icons/fa";
 import CreateRuleModal from "./CreateRuleModal";
+import Button from "@/components/common/Button";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 const Rules = [
   {
@@ -24,15 +26,24 @@ const Rules = [
 ];
 
 export default function RuleBook() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedRule, setSelectedRule] = useState({});
 
-    const [modalOpen, setModalOpen] = useState(false);
-    const [selectedRule, setSelectedRule] = useState({});
+  const onDelete = () => {
+    console.log(selectedRule);
+  };
   return (
     <>
       <div className="flex justify-end items-center mb-5">
-        <button className="cursor-pointer rounded-lg bg-[#2c2c2c] px-4 py-2 text-[#ffffff]" onClick={()=>setModalOpen(true)}>
-          New Rule
-        </button>
+        <Button
+          type="button"
+          text="New Rule"
+          onClick={() => {
+            setModalOpen(true);
+            setSelectedRule({});
+          }}
+        />
       </div>
       <div className="space-y-5">
         {Rules.map((rule) => (
@@ -49,21 +60,42 @@ export default function RuleBook() {
 
             <div className="flex gap-2 items-center px-4">
               <BiSolidEditAlt
-  size={20}
-  onClick={() => {
-    setModalOpen(true);
-    setSelectedRule(rule);
-  }}
-/>
-              <FaTrash color="#dc3545" size={18} />
+                size={20}
+                onClick={() => {
+                  setModalOpen(true);
+                  setSelectedRule(rule);
+                }}
+                className="cursor-pointer"
+              />
+              <FaTrash
+                color="#dc3545"
+                size={18}
+                onClick={() => {
+                  setDeleteModalOpen(true);
+                  setSelectedRule(rule);
+                }}
+                className="cursor-pointer"
+              />
             </div>
           </div>
         ))}
       </div>
 
-        {modalOpen && (
-            <CreateRuleModal isOpen={modalOpen} onClose={()=>setModalOpen(false)} rule={selectedRule} />
-        )}
+      {modalOpen && (
+        <CreateRuleModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          rule={selectedRule}
+        />
+      )}
+
+      {deleteModalOpen && (
+        <ConfirmDeleteModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onDelete={onDelete}
+        />
+      )}
     </>
   );
 }
