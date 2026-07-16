@@ -3,23 +3,23 @@
 import { useState } from "react";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { FaTrash } from "react-icons/fa";
-import CreateRuleModal from "./CreateRuleModal";
 import Button from "@/components/common/Button";
 import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
+import CreateUpdateRuleModal from "./CreateUpdateRuleModal";
 
 const Rules = [
   {
-    id: 1,
+    id: 101,
     ruleNumber: "RULE-01",
     rule: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
   },
   {
-    id: 2,
+    id: 102,
     ruleNumber: "RULE-02",
     rule: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
   },
   {
-    id: 3,
+    id: 103,
     ruleNumber: "RULE-03",
     rule: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
   },
@@ -82,7 +82,7 @@ export default function RuleBook() {
       </div>
 
       {modalOpen && (
-        <CreateRuleModal
+        <CreateUpdateRuleModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           rule={selectedRule}

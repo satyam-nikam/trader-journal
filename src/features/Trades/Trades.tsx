@@ -1,10 +1,18 @@
 "use client";
 
+import Button from "@/components/common/Button";
 import CommonTable from "@/components/common/Table";
+import useUserStore from "@/store/UserStore";
 import { ColumnDef } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { BiSolidEditAlt } from "react-icons/bi";
+import { FaTrash } from "react-icons/fa";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 
 type Trade = {
-  id: string;
+  id: number;
+  tradeNumber: string;
   date: string;
   symbol: string;
   setup: string;
@@ -29,7 +37,8 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
 
 const trades: Trade[] = [
   {
-    id: "TRD-1001",
+    id: 1001,
+    tradeNumber: "TRD-1001",
     date: "2026-06-12",
     symbol: "AAPL",
     setup: "Opening range breakout",
@@ -42,7 +51,8 @@ const trades: Trade[] = [
     status: "Win",
   },
   {
-    id: "TRD-1002",
+    id: 1002,
+    tradeNumber: "TRD-1002",
     date: "2026-06-11",
     symbol: "TSLA",
     setup: "VWAP rejection",
@@ -55,7 +65,8 @@ const trades: Trade[] = [
     status: "Loss",
   },
   {
-    id: "TRD-1003",
+    id: 1003,
+    tradeNumber: "TRD-1003",
     date: "2026-06-10",
     symbol: "NVDA",
     setup: "Pullback continuation",
@@ -68,7 +79,8 @@ const trades: Trade[] = [
     status: "Win",
   },
   {
-    id: "TRD-1004",
+    id: 1004,
+    tradeNumber: "TRD-1004",
     date: "2026-06-09",
     symbol: "MSFT",
     setup: "Support bounce",
@@ -81,7 +93,8 @@ const trades: Trade[] = [
     status: "Breakeven",
   },
   {
-    id: "TRD-1005",
+    id: 1005,
+    tradeNumber: "TRD-1005",
     date: "2026-06-08",
     symbol: "AMD",
     setup: "Gap fill",
@@ -94,7 +107,8 @@ const trades: Trade[] = [
     status: "Win",
   },
   {
-    id: "TRD-1006",
+    id: 1006,
+    tradeNumber: "TRD-1006",
     date: "2026-06-05",
     symbol: "META",
     setup: "Trend day continuation",
@@ -107,7 +121,8 @@ const trades: Trade[] = [
     status: "Loss",
   },
   {
-    id: "TRD-1007",
+    id: 1007,
+    tradeNumber: "TRD-1007",
     date: "2026-06-04",
     symbol: "AMZN",
     setup: "Flag breakout",
@@ -121,7 +136,10 @@ const trades: Trade[] = [
   },
 ];
 
-const tradeColumns: ColumnDef<Trade>[] = [
+export default function Trades() {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const tradeColumns: ColumnDef<Trade>[] = [
   {
     accessorKey: "date",
     header: "Date",
@@ -218,17 +236,70 @@ const tradeColumns: ColumnDef<Trade>[] = [
       );
     },
   },
+  {
+        accessorKey: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex gap-4">
+            <button>
+              <MdOutlineRemoveRedEye
+                color="#0D4EAF"
+                size={18}
+                onClick={() => {
+                  setSelectedTradeID(row.original.id);
+                }}
+                className="cursor-pointer"
+              />
+            </button>
+            <button>
+              <BiSolidEditAlt
+                size={20}
+                onClick={() => {
+                  setSelectedTradeID(row.original.id);
+                }}
+                className="cursor-pointer"
+              />
+            </button>
+            <button>
+              <FaTrash
+                color="#dc3545"
+                size={18}
+                onClick={() => {
+                  setSelectedTradeID(row.original.id);
+                  setDeleteModalOpen(true);
+                }}
+                className="cursor-pointer"
+              />
+            </button>
+          </div>
+        ),
+      },
 ];
 
-export default function Trades() {
+  const { setSelectedTradeID } = useUserStore();
+  const router = useRouter();
+
   return (
     <section className="space-y-5">
-      <div>
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col">
         <h1 className="text-2xl font-bold text-[#2c2c2c]">Trades</h1>
         <p className="mt-1 text-sm text-gray-500">
           Review journal entries, sort performance, and select rows for bulk
           actions.
         </p>
+      </div>
+
+      <div className="flex justify-end items-end">
+          <Button
+            type="button"
+            text="New Trade"
+            onClick={() => {
+              setSelectedTradeID(0);
+              router.push("/trades/id");
+            }}
+          />
+        </div>
       </div>
 
       <CommonTable
