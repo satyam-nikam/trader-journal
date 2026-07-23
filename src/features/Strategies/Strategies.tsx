@@ -97,26 +97,24 @@ export default function Strategies() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-4">
-          <button>
+          <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="View strategy">
             <MdOutlineRemoveRedEye
               color="#0D4EAF"
               size={18}
               onClick={() => {
                 setSelectedStrategyID(row.original.id);
               }}
-              className="cursor-pointer"
             />
           </button>
-          <button>
+          <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Edit strategy">
             <BiSolidEditAlt
               size={20}
               onClick={() => {
                 setSelectedStrategyID(row.original.id);
               }}
-              className="cursor-pointer"
             />
           </button>
-          <button>
+          <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Delete strategy">
             <FaTrash
               color="#dc3545"
               size={18}
@@ -124,7 +122,6 @@ export default function Strategies() {
                 setSelectedStrategyID(row.original.id);
                 setDeleteModalOpen(true);
               }}
-              className="cursor-pointer"
             />
           </button>
         </div>
@@ -138,25 +135,23 @@ export default function Strategies() {
 
   return (
     <section className="space-y-5">
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col">
-          <h1 className="page-title">Strategies</h1>
-          <p className="mt-1 text-sm text-gray-500">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 px-5 py-4 shadow-sm shadow-black/5">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Strategies</h2>
+          <p className="mt-1 text-sm text-slate-500">
             Review journal entries, sort performance, and select rows for bulk
             actions.
           </p>
         </div>
 
-        <div className="flex justify-end items-end">
-          <Button
-            type="button"
-            text="New Strategy"
-            onClick={() => {
-              setSelectedStrategyID(0);
-              router.push("/strategies/id");
-            }}
-          />
-        </div>
+        <Button
+          type="button"
+          text="New Strategy"
+          onClick={() => {
+            setSelectedStrategyID(0);
+            router.push("/strategies/id");
+          }}
+        />
       </div>
 
       <CommonTable

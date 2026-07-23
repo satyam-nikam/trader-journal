@@ -60,14 +60,16 @@ const Modal: React.FC<ModalProps> = ({
 					className="px-4 py-3 text-white flex items-center justify-between text-lg"
 				>
 					<div>{header}</div>
-					<button
+					<div className="flex items-center justify-center w-8 h-8 rounded-full bg-white cursor-pointer">
+						<button
 						aria-label="Close modal"
 						onClick={onClose}
-						className="text-white text-2xl leading-none"
+						className="text-black text-2xl leading-none"
 						style={{ background: "transparent", border: "none" }}
 					>
 						&times;
 					</button>
+					</div>
 				</div>
 
 				<div className="p-4">{children}</div>

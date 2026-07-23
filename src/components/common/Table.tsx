@@ -125,7 +125,7 @@ export default function CommonTable<T>({
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-[#2c2c2c] text-left text-sm font-semibold uppercase tracking-wide text-white">
+          <thead className="bg-[#2c2c2c] text-left text-[15px] font-medium uppercase tracking-wide text-white">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {enableRowSelection && (

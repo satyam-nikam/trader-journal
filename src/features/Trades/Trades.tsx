@@ -241,26 +241,24 @@ export default function Trades() {
         header: "Actions",
         cell: ({ row }) => (
           <div className="flex gap-4">
-            <button>
+            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="View trade">
               <MdOutlineRemoveRedEye
                 color="#0D4EAF"
                 size={18}
                 onClick={() => {
                   setSelectedTradeID(row.original.id);
                 }}
-                className="cursor-pointer"
               />
             </button>
-            <button>
+            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Edit trade">
               <BiSolidEditAlt
                 size={20}
                 onClick={() => {
                   setSelectedTradeID(row.original.id);
                 }}
-                className="cursor-pointer"
               />
             </button>
-            <button>
+            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Delete trade">
               <FaTrash
                 color="#dc3545"
                 size={18}
@@ -268,7 +266,6 @@ export default function Trades() {
                   setSelectedTradeID(row.original.id);
                   setDeleteModalOpen(true);
                 }}
-                className="cursor-pointer"
               />
             </button>
           </div>
@@ -281,25 +278,23 @@ export default function Trades() {
 
   return (
     <section className="space-y-5">
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col">
-        <h1 className="text-2xl font-bold text-[#2c2c2c]">Trades</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Review journal entries, sort performance, and select rows for bulk
-          actions.
-        </p>
-      </div>
-
-      <div className="flex justify-end items-end">
-          <Button
-            type="button"
-            text="New Trade"
-            onClick={() => {
-              setSelectedTradeID(0);
-              router.push("/trades/id");
-            }}
-          />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 px-5 py-4 shadow-sm shadow-black/5">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Trades</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Review journal entries, sort performance, and select rows for bulk
+            actions.
+          </p>
         </div>
+
+        <Button
+          type="button"
+          text="New Trade"
+          onClick={() => {
+            setSelectedTradeID(0);
+            router.push("/trades/id");
+          }}
+        />
       </div>
 
       <CommonTable

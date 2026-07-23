@@ -22,4 +22,6 @@ model Rules {
   id                 Int      @id @default(autoincrement())
   ruleNumber         String   @unique
   rule               String
+  category           String
+  status             String
 }

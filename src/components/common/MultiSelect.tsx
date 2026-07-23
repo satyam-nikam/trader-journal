@@ -66,7 +66,7 @@ export default function MultiSelect({
           if (e.key === "Escape") setOpen(false);
         }}
         className={[
-          "relative flex min-h-[40px] flex-wrap gap-1.5 cursor-pointer select-none",
+          "relative flex min-h-10 flex-wrap gap-1.5 cursor-pointer select-none",
           "rounded-lg border bg-gray-50 px-2.5 py-2 transition-all duration-150",
           "outline-none",
           open

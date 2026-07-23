@@ -2,11 +2,12 @@
 
 import { Controller, useForm } from "react-hook-form";
 import MultiSelect from "@/components/common/MultiSelect";
+import Select from "@/components/common/Select";
 import Field from "@/components/common/Field";
 import Button from "@/components/common/Button";
 import { useRouter } from "next/navigation";
-import { FaChartLine, FaPlus } from "react-icons/fa";
-import { IoIosArrowDown, IoMdClose } from "react-icons/io";
+import { FaChartLine, FaPlus, FaRocket } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 import { useState } from "react";
 
 interface StrategyFormValues {
@@ -86,20 +87,27 @@ export default function CreateUpdateStrategy() {
   }
 
   return (
-    <div className="mx-auto max-w-200 py-6">
+    <div className="mx-auto max-w-4xl py-2">
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-black/5">
         {/* ── Header ── */}
-        <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-5 bg-gray-200">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-blue-50 text-blue-500">
-            <FaChartLine size={20} />
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-linear-to-r from-slate-900 via-slate-800 to-slate-700 px-6 py-6 text-white">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
+              <FaChartLine size={20} />
+            </div>
+            <div>
+              <h2 className="text-[18px] font-semibold leading-tight">
+                Define a new strategy
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Set up the details for your trading strategy.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-[16px] font-semibold leading-tight text-gray-900">
-              Add a New strategy 
-            </h2>
-            <p className="mt-0.5 text-[13px] text-slate-500">
-              Define trading strategy configuration for your trades
-            </p>
+
+          <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm text-slate-100">
+            <FaRocket size={14} />
+            <span>Trade journal</span>
           </div>
         </div>
 
@@ -135,28 +143,14 @@ export default function CreateUpdateStrategy() {
               control={control}
               render={({ field }) => (
                 <Field label="Strategy type" htmlFor="strategyType">
-                  <div className="relative">
-                    <select
-                      {...field}
-                      id="strategyType"
-                      className="form-input cursor-pointer appearance-none pr-10"
-                    >
-                      <option value="" className="text-slate-400" disabled>
-                        Select type…
-                      </option>
-
-                      {strategyTypeOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    <IoIosArrowDown
-                      size={14}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-800"
-                    />
-                  </div>
+                  <Select
+                    id="strategyType"
+                    label=""
+                    options={strategyTypeOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select type…"
+                  />
                 </Field>
               )}
             />
@@ -169,28 +163,14 @@ export default function CreateUpdateStrategy() {
               control={control}
               render={({ field }) => (
                 <Field label="Instrument type" htmlFor="instrumentType">
-                  <div className="relative">
-                    <select
-                      {...field}
-                      id="instrumentType"
-                      className="form-input cursor-pointer appearance-none pr-10"
-                    >
-                      <option value="" className="text-slate-400" disabled>
-                        Select instrument…
-                      </option>
-
-                      {instrumentTypeOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    <IoIosArrowDown
-                      size={14}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-800"
-                    />
-                  </div>
+                  <Select
+                    id="instrumentType"
+                    label=""
+                    options={instrumentTypeOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select instrument…"
+                  />
                 </Field>
               )}
             />
