@@ -2,15 +2,25 @@ import Button from "@/components/common/Button";
 import Field from "@/components/common/Field";
 import Modal from "@/components/common/Modal";
 import Select from "@/components/common/Select";
+import Spinner from "@/components/common/Spinner";
+import { useToast } from "@/components/common/ToastProvider";
+import { useSaveRule, useUpdateRule } from "@/hooks/useRules";
 import { Controller, useForm } from "react-hook-form";
 import { FaBookOpen } from "react-icons/fa";
+
+interface RuleItem {
+  id: number;
+  ruleNumber: string;
+  rule: string;
+  category: string;
+  status: string;
+}
 
 interface RuleFormValues {
   ruleNumber: string;
   rule: string;
   category: string;
   status: string;
-  isRequired: boolean;
 }
 
 const categoryOptions = [
@@ -32,11 +42,16 @@ export default function CreateUpdateRuleModal({
   onClose,
   rule,
   isOpen,
+  refetchRules,
 }: {
   onClose: () => void;
-  rule?: Record<string, unknown>;
+  rule?: RuleItem;
   isOpen: boolean;
+  refetchRules: () => void;
 }) {
+  const { showToast } = useToast();
+  const { mutate: saveRuleMutate, isPending: isSaving } = useSaveRule();
+  const { mutate: updateRuleMutate, isPending: isUpdating } = useUpdateRule();
   const {
     control,
     handleSubmit,
@@ -48,23 +63,72 @@ export default function CreateUpdateRuleModal({
       rule: (rule?.rule as string) || "",
       category: (rule?.category as string) || "",
       status: (rule?.status as string) || "",
-      isRequired: Boolean(rule?.isRequired),
     },
   });
-
+  
+  const loading = isSaving || isUpdating || isSubmitting;
   const header = rule?.id ? "Edit Rule" : "New Rule";
 
   function onSubmit(data: RuleFormValues) {
     console.log(data);
-    onClose();
+
+    const successMessage = rule?.id
+      ? "Rule updated successfully"
+      : "Rule saved successfully";
+
+    if (rule?.id) {
+      updateRuleMutate(
+        {
+          id: rule.id,
+          ruleNumber: data.ruleNumber,
+          rule: data.rule,
+          category: data.category,
+          status: data.status,
+        },
+        {
+          onSuccess: (response: any) => {
+            showToast("success", response?.message || successMessage);
+            onClose();
+            refetchRules();
+          },
+          onError: (error: any) => {
+            const message = error?.message || "Unable to update rule";
+            showToast("error", message);
+          },
+        }
+      );
+      return;
+    }
+
+    saveRuleMutate(
+      {
+        ruleNumber: data.ruleNumber,
+        rule: data.rule,
+        category: data.category,
+        status: data.status,
+      },
+      {
+        onSuccess: (response: any) => {
+          showToast("success", response?.message || successMessage);
+          onClose();  
+          refetchRules();
+        },
+        onError: (error: any) => {
+          const message = error?.message || "Unable to save rule";
+          showToast("error", message);
+        },
+      }
+    );
+
   }
 
   const footer = (
     <div className="flex flex-wrap justify-center gap-2">
-      <Button type="button" btnType="danger" text="Cancel" onClick={onClose} />
+      <Button type="button" btnType="danger" disabled={loading} text="Cancel" onClick={onClose} />
       <Button
         type="button"
         btnType="secondary"
+        disabled={loading}
         text="Clear All"
         onClick={() =>
           reset({
@@ -72,11 +136,15 @@ export default function CreateUpdateRuleModal({
             rule: "",
             category: "",
             status: "",
-            isRequired: false,
           })
         }
       />
-      <Button type="submit" text="Save Rule" disabled={isSubmitting} />
+      <Button
+        type="button"
+        onClick={handleSubmit(onSubmit)}
+        text={rule?.id ? "Update Rule" : "Save Rule"}
+        disabled={loading}
+      />
     </div>
   );
 
@@ -96,6 +164,7 @@ export default function CreateUpdateRuleModal({
       className="max-w-2xl overflow-hidden rounded-2xl"
     >
       <form className="flex flex-col gap-4 p-1" onSubmit={handleSubmit(onSubmit)}>
+        {(isSaving || isUpdating) && <Spinner />}
         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
           <div className="mb-3 text-sm font-semibold text-slate-700">Rule details</div>
 

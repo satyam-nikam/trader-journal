@@ -23,7 +23,9 @@ export const getAllRules = async () => {
 
 export const saveRule = async (
   rule: string,
-  ruleNumber: string
+  ruleNumber: string,
+  category: string,
+  status: string
 ) => {
   const existingRule = await prisma.rules.findUnique({
     where: {
@@ -39,6 +41,8 @@ export const saveRule = async (
     data: {
       rule,
       ruleNumber,
+      category,
+      status,
     },
   });
 
@@ -48,7 +52,9 @@ export const saveRule = async (
 export const updateRule = async (
   id: number,
   rule: string,
-  ruleNumber: string
+  ruleNumber: string,
+  category: string,
+  status: string,
 ) => {
   const existingRule = await prisma.rules.findUnique({
     where: {
@@ -77,6 +83,8 @@ export const updateRule = async (
     data: {
       rule,
       ruleNumber,
+      category,
+      status,
     },
   });
 
@@ -93,4 +101,20 @@ export const getRuleById = async (id: number) => {
     throw new Error("Rule not found");
   }
   return rule;
+};
+
+export const deleteRule = async (id: number) => {
+  const existingRule = await prisma.rules.findUnique({
+    where: {
+      id,
+    },
+  });
+  if (!existingRule) {
+    throw new Error("Rule not found");
+  }
+  await prisma.rules.delete({
+    where: {
+      id,
+    },
+  });
 };

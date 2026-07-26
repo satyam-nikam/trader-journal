@@ -1,13 +1,13 @@
 "use client";
 
+import { useToast } from "@/components/common/ToastProvider";
 import { useLogin, useRegister, useVerifyOTP } from "@/hooks/useAuth";
-import { saveOTP } from "@/services/auth.service";
-import { RegisterPayload } from "@/types/auth.types";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Login() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { mutate: registerMutate, isPending: registerPending } = useRegister();
   const { mutate: loginMutate, isPending: loginPending } = useLogin();
   const { mutate: verifyOtpMutate, isPending: verifyOtpPending } = useVerifyOTP();
@@ -111,16 +111,18 @@ const formatTimer = (seconds: number) => {
     loginMutate(
       { email: user.email, password: user.password },
       {
-        onSuccess: () => {
+        onSuccess: (response: any) => {
+          showToast("success", response?.message || "Logged in successfully");
           console.log("Logged in successfully");
-              setTimer(120);
-    setTab("2fa");
+          setTimer(120);
+          setTab("2fa");
         },
         onError: (error: any) => {
+          const message = error?.message || "Invalid email or password";
+          showToast("error", message);
           setUser((state) => ({
             ...state,
-            failErr:
-              error?.response?.data?.message ?? "Invalid email or password",
+            failErr: message,
           }));
         },
       },
@@ -139,7 +141,8 @@ const formatTimer = (seconds: number) => {
     { email: user.email, otp: user.otp },  // pass whatever your API expects
     {
       onSuccess: () => {
-        router.push("/dashboard");          
+        showToast("success", "OTP verified successfully");
+        router.push("/dashboard");
         console.log("otp verified")
         setUser({
             email: "",
@@ -155,9 +158,11 @@ const formatTimer = (seconds: number) => {
           });
       },
       onError: (error: any) => {
+        const message = error?.message || "Invalid OTP. Try again.";
+        showToast("warning", message);
         setUser((state) => ({
           ...state,
-          otpErr: error?.response?.data?.message ?? "Invalid OTP. Try again.",
+          otpErr: message,
           otp: "",   
         }));
         // refocus first OTP input
@@ -246,7 +251,8 @@ const formatTimer = (seconds: number) => {
     registerMutate(
       { email: user.email, password: user.password, fullName: user.fullname },
       {
-        onSuccess: () => {
+        onSuccess: (response: any) => {
+          showToast("success", response?.message || "Account created successfully");
           console.log("User created");
           setUser({
             email: "",
@@ -263,11 +269,11 @@ const formatTimer = (seconds: number) => {
           setTab("login");
         },
         onError: (error: any) => {
+          const message = error?.message || "Registration failed. Please try again.";
+          showToast("error", message);
           setUser((state) => ({
             ...state,
-            failErr:
-              error?.response?.data?.message ??
-              "Registration failed. Please try again.",
+            failErr: message,
           }));
         },
       },
