@@ -25,3 +25,14 @@ model Rules {
   category           String
   status             String
 }
+
+model Strategy {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  strategyType    String
+  instrumentType  String
+  description     String   @db.Text
+  timeFrame       Json
+  entryConditions Json
+  indicatorsUsed  Json
+}

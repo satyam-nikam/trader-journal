@@ -2,7 +2,7 @@
 
 import CommonTable from "@/components/common/Table";
 import { ColumnDef } from "@tanstack/react-table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { FaTrash } from "react-icons/fa";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
@@ -10,69 +10,41 @@ import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import useUserStore from "@/store/UserStore";
 import Button from "@/components/common/Button";
 import { useRouter } from "next/navigation";
+import { useDeleteStrategy, useGetAllStrategies } from "@/hooks/useStrategy";
+import { useToast } from "@/components/common/ToastProvider";
+import Spinner from "@/components/common/Spinner";
 
 type Strategies = {
   id: number;
-  strategyName: string;
+  name: string;
   strategyType: string;
   instrumentType: string;
   description: string;
   timeFrame: string[];
-  entryConditions: string;
-  indicatiorsUsed: string[];
+  entryConditions: string[];
+  indicatorsUsed: string[];
 };
-
-const StrategiesData = [
-  {
-    id: 1001,
-    strategyName: "Strategy 1",
-    strategyType: "Scalping",
-    instrumentType: "Options",
-    description: "desc",
-    timeFrame: ["3m", "5m", "1h"],
-    entryConditions: "entry conditions",
-    indicatiorsUsed: ["RSI", "MACD"],
-  },
-  {
-    id: 1002,
-    strategyName: "Strategy 2",
-    strategyType: "Scalping",
-    instrumentType: "Options",
-    description: "desc",
-    timeFrame: ["3m", "5m", "1h"],
-    entryConditions: "entry conditions",
-    indicatiorsUsed: ["RSI", "MACD"],
-  },
-  {
-    id: 1003,
-    strategyName: "Strategy 3",
-    strategyType: "Scalping",
-    instrumentType: "Options",
-    description: "desc",
-    timeFrame: ["3m", "5m", "1h"],
-    entryConditions: "entry conditions",
-    indicatiorsUsed: ["RSI", "MACD"],
-  },
-  {
-    id: 1004,
-    strategyName: "Strategy 4",
-    strategyType: "Scalping",
-    instrumentType: "Options",
-    description: "desc",
-    timeFrame: ["3m", "5m", "1h"],
-    entryConditions: "entry conditions",
-    indicatiorsUsed: ["RSI", "MACD"],
-  },
-];
 
 export default function Strategies() {
   const router = useRouter();
   const { setSelectedStrategyID } = useUserStore();
+  const { showToast } = useToast();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedStrategy, setSelectedStrategy] = useState<Strategies | null>(null);
+  const { mutate: deleteStrategyMutate, isPending: isDeleting } = useDeleteStrategy();
+  const { data, isPending: isLoadingStrategies, refetch } = useGetAllStrategies();
+  const strategies = (data?.strategies ?? []) as Strategies[];
+  const loading = isLoadingStrategies || isDeleting;
+
+  useEffect(() => {
+    if (!isLoadingStrategies && data?.success === false && data?.message) {
+      showToast("warning", data.message);
+    }
+  }, [data, isLoadingStrategies, showToast]);
 
   const strategyColumns: ColumnDef<Strategies>[] = [
     {
-      accessorKey: "strategyName",
+      accessorKey: "name",
       header: "Name",
     },
     {
@@ -91,6 +63,10 @@ export default function Strategies() {
     {
       accessorKey: "timeFrame",
       header: "Time Frame",
+      cell: ({ getValue }) => {
+        const values = Array.isArray(getValue<string[]>()) ? getValue<string[]>() : [];
+        return <span>{values.join(", ")}</span>;
+      },
     },
     {
       accessorKey: "actions",
@@ -111,6 +87,7 @@ export default function Strategies() {
               size={20}
               onClick={() => {
                 setSelectedStrategyID(row.original.id);
+                router.push(`/strategies/id/${row.original.id}`);
               }}
             />
           </button>
@@ -120,6 +97,7 @@ export default function Strategies() {
               size={18}
               onClick={() => {
                 setSelectedStrategyID(row.original.id);
+                setSelectedStrategy(row.original);
                 setDeleteModalOpen(true);
               }}
             />
@@ -130,7 +108,23 @@ export default function Strategies() {
   ];
 
   const onDelete = () => {
-    setDeleteModalOpen(false);
+    if (!selectedStrategy?.id) {
+      setDeleteModalOpen(false);
+      return;
+    }
+
+    deleteStrategyMutate(selectedStrategy.id, {
+      onSuccess: (response: any) => {
+        showToast("success", response?.message || "Strategy deleted successfully");
+        setDeleteModalOpen(false);
+        setSelectedStrategy(null);
+        refetch();
+      },
+      onError: (error: any) => {
+        const message = error?.message || "Unable to delete strategy";
+        showToast("error", message);
+      },
+    });
   };
 
   return (
@@ -139,8 +133,7 @@ export default function Strategies() {
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Strategies</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Review journal entries, sort performance, and select rows for bulk
-            actions.
+            Review journal entries, sort performance, and select rows for bulk actions.
           </p>
         </div>
 
@@ -149,24 +142,39 @@ export default function Strategies() {
           text="New Strategy"
           onClick={() => {
             setSelectedStrategyID(0);
-            router.push("/strategies/id");
+            router.push("/strategies/id/0");
           }}
         />
       </div>
 
-      <CommonTable
-        data={StrategiesData}
-        columns={strategyColumns}
-        pageSize={5}
-        enableSorting
-        enablePagination
-        enableRowSelection
-      />
+      {loading && <Spinner />}
+
+      {isLoadingStrategies ? (
+        <div className="rounded-3xl border border-slate-200 bg-white/80 px-6 py-10 text-center text-sm text-slate-500">
+          Loading strategies...
+        </div>
+      ) : strategies.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50/70 px-6 py-10 text-center text-sm text-slate-500">
+          No strategies yet. Create your first trading setup to get started.
+        </div>
+      ) : (
+        <CommonTable
+          data={strategies}
+          columns={strategyColumns}
+          pageSize={5}
+          enableSorting
+          enablePagination
+          enableRowSelection
+        />
+      )}
 
       {deleteModalOpen && (
         <ConfirmDeleteModal
           isOpen={deleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedStrategy(null);
+          }}
           onDelete={onDelete}
         />
       )}

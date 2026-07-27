@@ -5,10 +5,13 @@ import MultiSelect from "@/components/common/MultiSelect";
 import Select from "@/components/common/Select";
 import Field from "@/components/common/Field";
 import Button from "@/components/common/Button";
-import { useRouter } from "next/navigation";
+import Spinner from "@/components/common/Spinner";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FaChartLine, FaPlus, FaRocket } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useGetAllStrategies, useSaveStrategy, useUpdateStrategy } from "@/hooks/useStrategy";
+import { useToast } from "@/components/common/ToastProvider";
 
 interface StrategyFormValues {
   name: string;
@@ -17,7 +20,18 @@ interface StrategyFormValues {
   description: string;
   timeFrame: string[];
   entryConditions: string[];
-  indicatorsUsed: string;
+  indicatorsUsed: string[];
+}
+
+interface StrategyItem {
+  id: number;
+  name: string;
+  strategyType: string;
+  instrumentType: string;
+  description: string;
+  timeFrame: string[];
+  entryConditions: string[];
+  indicatorsUsed: string[];
 }
 
 const strategyTypeOptions = [
@@ -45,9 +59,47 @@ const timeFrameOptions = [
   { value: "1w", label: "Weekly" },
 ];
 
+const emptyValues: StrategyFormValues = {
+  name: "",
+  strategyType: "",
+  instrumentType: "",
+  description: "",
+  timeFrame: [],
+  entryConditions: [],
+  indicatorsUsed: [],
+};
+
+function buildDefaultValues(strategy?: StrategyItem | null): StrategyFormValues {
+  return {
+    name: strategy?.name ?? "",
+    strategyType: strategy?.strategyType ?? "",
+    instrumentType: strategy?.instrumentType ?? "",
+    description: strategy?.description ?? "",
+    timeFrame: Array.isArray(strategy?.timeFrame) ? strategy.timeFrame : [],
+    entryConditions: Array.isArray(strategy?.entryConditions)
+      ? strategy.entryConditions
+      : [],
+    indicatorsUsed: Array.isArray(strategy?.indicatorsUsed)
+      ? strategy.indicatorsUsed
+      : [],
+  };
+}
+
 export default function CreateUpdateStrategy() {
   const router = useRouter();
+  const params = useParams<{ strategyId?: string }>();
+  const searchParams = useSearchParams();
+  const routeStrategyId = params?.strategyId ?? searchParams.get("strategyId");
+  const parsedStrategyId = routeStrategyId ? Number(routeStrategyId) : 0;
+  const strategyId = Number.isInteger(parsedStrategyId) ? parsedStrategyId : 0;
+  const isEditing = strategyId > 0;
+  const { showToast } = useToast();
+  const { data, isPending: isLoadingStrategies, refetch } = useGetAllStrategies();
+  const { mutate: saveStrategyMutate, isPending: isSaving } = useSaveStrategy();
+  const { mutate: updateStrategyMutate, isPending: isUpdating } = useUpdateStrategy();
   const [conditionInput, setConditionInput] = useState("");
+  const [indicatorInput, setIndicatorInput] = useState("");
+  const [selectedStrategy, setSelectedStrategy] = useState<StrategyItem | null>(null);
 
   const {
     control,
@@ -57,23 +109,50 @@ export default function CreateUpdateStrategy() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<StrategyFormValues>({
-    defaultValues: {
-      name: "",
-      strategyType: "",
-      instrumentType: "",
-      description: "",
-      timeFrame: [],
-      entryConditions: [],
-      indicatorsUsed: "",
-    },
+    defaultValues: emptyValues,
   });
 
   const description = watch("description") ?? "";
-  const indicatorsUsed = watch("indicatorsUsed") ?? "";
+  const rawIndicatorsUsed = watch("indicatorsUsed");
+  const indicatorsUsed = Array.isArray(rawIndicatorsUsed) ? rawIndicatorsUsed : [];
   const rawEntryConditions = watch("entryConditions");
   const entryConditions = Array.isArray(rawEntryConditions)
     ? rawEntryConditions
     : [];
+  const loading = isLoadingStrategies || isSaving || isUpdating || isSubmitting;
+
+  useEffect(() => {
+    if (routeStrategyId && !Number.isInteger(parsedStrategyId) && Number(routeStrategyId) !== 0) {
+      showToast("error", "Invalid strategy id");
+      router.replace("/strategies");
+      return;
+    }
+
+    const strategies = (data?.strategies ?? []) as StrategyItem[];
+    const matchedStrategy = isEditing
+      ? strategies.find((strategy) => strategy.id === strategyId) ?? null
+      : null;
+
+    setSelectedStrategy(matchedStrategy);
+
+    if (isEditing && !isLoadingStrategies && !matchedStrategy) {
+      showToast("error", "Strategy not found");
+      router.replace("/strategies");
+      return;
+    }
+
+    const formValues = buildDefaultValues(matchedStrategy);
+    reset(formValues);
+    setValue("name", formValues.name, { shouldDirty: true, shouldValidate: true });
+    setValue("strategyType", formValues.strategyType, { shouldDirty: true, shouldValidate: true });
+    setValue("instrumentType", formValues.instrumentType, { shouldDirty: true, shouldValidate: true });
+    setValue("description", formValues.description, { shouldDirty: true, shouldValidate: true });
+    setValue("timeFrame", formValues.timeFrame, { shouldDirty: true, shouldValidate: true });
+    setValue("entryConditions", formValues.entryConditions, { shouldDirty: true, shouldValidate: true });
+    setValue("indicatorsUsed", formValues.indicatorsUsed, { shouldDirty: true, shouldValidate: true });
+    setConditionInput("");
+    setIndicatorInput("");
+  }, [data, isEditing, isLoadingStrategies, parsedStrategyId, reset, routeStrategyId, router, showToast, strategyId, setValue]);
 
   function handleAddCondition() {
     const trimmed = conditionInput.trim();
@@ -82,14 +161,58 @@ export default function CreateUpdateStrategy() {
     setConditionInput("");
   }
 
+  function handleAddIndicator() {
+    const trimmed = indicatorInput.trim();
+    if (!trimmed) return;
+    setValue("indicatorsUsed", [...indicatorsUsed, trimmed]);
+    setIndicatorInput("");
+  }
+
   function onSubmit(data: StrategyFormValues) {
-    console.log(data);
+    const payload = {
+      name: data.name,
+      strategyType: data.strategyType,
+      instrumentType: data.instrumentType,
+      description: data.description,
+      timeFrame: data.timeFrame,
+      entryConditions: data.entryConditions,
+      indicatorsUsed: data.indicatorsUsed,
+    };
+
+    if (selectedStrategy?.id) {
+      updateStrategyMutate(
+        { id: selectedStrategy.id, ...payload },
+        {
+          onSuccess: (response: any) => {
+            showToast("success", response?.message || "Strategy updated successfully");
+            refetch();
+            router.push("/strategies");
+          },
+          onError: (error: any) => {
+            const message = error?.message || "Unable to update strategy";
+            showToast("error", message);
+          },
+        },
+      );
+      return;
+    }
+
+    saveStrategyMutate(payload, {
+      onSuccess: (response: any) => {
+        showToast("success", response?.message || "Strategy saved successfully");
+        refetch();
+        router.push("/strategies");
+      },
+      onError: (error: any) => {
+        const message = error?.message || "Unable to save strategy";
+        showToast("error", message);
+      },
+    });
   }
 
   return (
     <div className="mx-auto max-w-4xl py-2">
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-black/5">
-        {/* ── Header ── */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-linear-to-r from-slate-900 via-slate-800 to-slate-700 px-6 py-6 text-white">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
@@ -97,10 +220,12 @@ export default function CreateUpdateStrategy() {
             </div>
             <div>
               <h2 className="text-[18px] font-semibold leading-tight">
-                Define a new strategy
+                {selectedStrategy?.id ? "Update strategy" : "Define a new strategy"}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
-                Set up the details for your trading strategy.
+                {selectedStrategy?.id
+                  ? "Adjust the strategy details and keep your journal aligned."
+                  : "Set up the details for your trading strategy."}
               </p>
             </div>
           </div>
@@ -115,8 +240,8 @@ export default function CreateUpdateStrategy() {
           className="flex flex-col gap-4 px-6 py-5"
           onSubmit={handleSubmit(onSubmit)}
         >
+          {loading && <Spinner />}
           <div className="grid grid-cols-2 gap-3">
-            {/* Strategy name */}
             <Controller
               name="name"
               control={control}
@@ -156,7 +281,6 @@ export default function CreateUpdateStrategy() {
             />
           </div>
 
-          {/* Strategy type + Instrument type */}
           <div className="grid grid-cols-2 gap-3">
             <Controller
               name="instrumentType"
@@ -175,7 +299,6 @@ export default function CreateUpdateStrategy() {
               )}
             />
 
-            {/* Time frames */}
             <Controller
               name="timeFrame"
               control={control}
@@ -193,29 +316,51 @@ export default function CreateUpdateStrategy() {
             />
           </div>
 
-          {/* Indicators Used */}
-          <Controller
-            name="indicatorsUsed"
-            control={control}
-            rules={{ required: "Indicators Used is required" }}
-            render={({ field }) => (
-              <Field label="Indicatiors Used" htmlFor="indicatorsUsed">
-                <textarea
-                  {...field}
-                  id="indicatorsUsed"
-                  rows={3}
-                  maxLength={300}
-                  placeholder="e.g. Bollinger Bands, MACD"
-                  className={`form-input resize-y leading-relaxed`}
-                />
-                <span className="text-right text-[11px] text-gray-300">
-                  {indicatorsUsed.length}/300
-                </span>
-              </Field>
-            )}
-          />
+          <Field label="Indicators Used" htmlFor="indicatorsUsed">
+            <div className="relative">
+              <input
+                id="indicatorsUsed"
+                type="text"
+                value={indicatorInput}
+                onChange={(e) => setIndicatorInput(e.target.value)}
+                placeholder="e.g. Bollinger Bands, MACD"
+                className="form-input resize-y leading-relaxed"
+              />
 
-          {/* Description */}
+              <div
+                className="absolute cursor-pointer right-0 rounded-r-lg top-1/2 -translate-y-1/2 text-slate-800 h-10 w-10 bg-[#2c2c2c] p-3"
+                onClick={handleAddIndicator}
+              >
+                <FaPlus color="white" size={14} />
+              </div>
+            </div>
+
+            {indicatorsUsed.length > 0 && (
+              <ul className="mt-2 grid grid-cols-3 gap-x-4 gap-y-1.5">
+                {indicatorsUsed.map((indicator, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-slate-400 bg-blue-100 px-3 py-1.5 text-sm text-[#2c2c2c]"
+                  >
+                    <span className="truncate">{indicator}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setValue(
+                          "indicatorsUsed",
+                          indicatorsUsed.filter((_, idx) => idx !== i),
+                        )
+                      }
+                      className="shrink-0 text-slate-800 transition-colors hover:text-red-400"
+                    >
+                      <IoMdClose size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Field>
+
           <Controller
             name="description"
             control={control}
@@ -227,7 +372,7 @@ export default function CreateUpdateStrategy() {
                   rows={3}
                   maxLength={300}
                   placeholder="Briefly describe what this strategy does and when it performs best…"
-                  className={`form-input resize-y leading-relaxed`}
+                  className="form-input resize-y leading-relaxed"
                 />
                 <span className="text-right text-[11px] text-gray-300">
                   {description.length}/300
@@ -236,7 +381,6 @@ export default function CreateUpdateStrategy() {
             )}
           />
 
-          {/* Entry conditions */}
           <Field label="Entry conditions" htmlFor="entryConditions">
             <div className="relative">
               <input
@@ -245,7 +389,7 @@ export default function CreateUpdateStrategy() {
                 value={conditionInput}
                 onChange={(e) => setConditionInput(e.target.value)}
                 placeholder="e.g. RSI crosses above 30 or price above 20-day EMA or volume > 1.5× average…"
-                className={`form-input resize-y leading-relaxed`}
+                className="form-input resize-y leading-relaxed"
               />
 
               <div
@@ -287,18 +431,18 @@ export default function CreateUpdateStrategy() {
               type="button"
               btnType="danger"
               text="Cancel"
-              onClick={router.back}
+              onClick={() => router.push("/strategies")}
             />
             <Button
               type="button"
               btnType="secondary"
               text="Clear All"
-              onClick={() => reset()}
+              onClick={() => reset(emptyValues)}
             />
             <Button
               type="submit"
-              text="Save strategy"
-              disabled={isSubmitting}
+              text={selectedStrategy?.id ? "Update Strategy" : "Save Strategy"}
+              disabled={loading}
             />
           </div>
         </form>
