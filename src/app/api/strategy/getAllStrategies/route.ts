@@ -1,8 +1,10 @@
 import { getAllStrategies } from "@/services/strategy.service";
-import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    getAuthenticatedUser(req);
     const { strategies, count } = await getAllStrategies();
 
     return NextResponse.json({

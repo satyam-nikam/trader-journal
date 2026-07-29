@@ -4,22 +4,31 @@ import { useToast } from "@/components/common/ToastProvider";
 import { useLogin, useRegister, useVerifyOTP } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import useUserStore from "@/store/UserStore";
 
 export default function Login() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { UserID, setUserID } = useUserStore();
   const { mutate: registerMutate, isPending: registerPending } = useRegister();
   const { mutate: loginMutate, isPending: loginPending } = useLogin();
   const { mutate: verifyOtpMutate, isPending: verifyOtpPending } = useVerifyOTP();
 
   const [tab, setTab] = useState<"login" | "register" | "2fa">("login");
   const [timer, setTimer] = useState(120);
+  const [pendingUserId, setPendingUserId] = useState(0);
   const otpRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
   ];
+  useEffect(() => {
+    if (UserID > 0) {
+      router.replace("/dashboard");
+    }
+  }, [UserID, router]);
+
   const [user, setUser] = useState({
     fullname: "",
     email: "",
@@ -60,7 +69,7 @@ const formatTimer = (seconds: number) => {
 
   const handleChange = (e: any) => {
     setUser((state) => ({ ...state, [e.target.name]: e.target.value }));
-    // validate(e.target.name, e.target.value);
+    validate(e.target.name, e.target.value);
   };
 
   const validate = (name: string, value: string) => {
@@ -113,7 +122,7 @@ const formatTimer = (seconds: number) => {
       {
         onSuccess: (response: any) => {
           showToast("success", response?.message || "Logged in successfully");
-          console.log("Logged in successfully");
+          setPendingUserId(response?.data?.id || response?.user?.id || 0);
           setTimer(120);
           setTab("2fa");
         },
@@ -142,7 +151,11 @@ const formatTimer = (seconds: number) => {
     {
       onSuccess: () => {
         showToast("success", "OTP verified successfully");
-        router.push("/dashboard");
+        if (pendingUserId > 0) {
+          setUserID(pendingUserId);
+        }
+        setPendingUserId(0);
+        router.replace("/dashboard");
         console.log("otp verified")
         setUser({
             email: "",

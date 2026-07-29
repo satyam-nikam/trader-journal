@@ -12,6 +12,7 @@ import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { useGetAllStrategies, useSaveStrategy, useUpdateStrategy } from "@/hooks/useStrategy";
 import { useToast } from "@/components/common/ToastProvider";
+import useUserStore from "@/store/UserStore";
 
 interface StrategyFormValues {
   name: string;
@@ -87,12 +88,8 @@ function buildDefaultValues(strategy?: StrategyItem | null): StrategyFormValues 
 
 export default function CreateUpdateStrategy() {
   const router = useRouter();
-  const params = useParams<{ strategyId?: string }>();
-  const searchParams = useSearchParams();
-  const routeStrategyId = params?.strategyId ?? searchParams.get("strategyId");
-  const parsedStrategyId = routeStrategyId ? Number(routeStrategyId) : 0;
-  const strategyId = Number.isInteger(parsedStrategyId) ? parsedStrategyId : 0;
-  const isEditing = strategyId > 0;
+  const { selectedStrategyID } = useUserStore();
+  const isEditing = selectedStrategyID > 0;
   const { showToast } = useToast();
   const { data, isPending: isLoadingStrategies, refetch } = useGetAllStrategies();
   const { mutate: saveStrategyMutate, isPending: isSaving } = useSaveStrategy();
@@ -122,15 +119,19 @@ export default function CreateUpdateStrategy() {
   const loading = isLoadingStrategies || isSaving || isUpdating || isSubmitting;
 
   useEffect(() => {
-    if (routeStrategyId && !Number.isInteger(parsedStrategyId) && Number(routeStrategyId) !== 0) {
-      showToast("error", "Invalid strategy id");
+    if (
+    selectedStrategyID !== 0 &&
+    selectedStrategyID !== null &&
+    selectedStrategyID !== undefined &&
+    (!Number.isInteger(selectedStrategyID) || selectedStrategyID < 0)
+  ){
       router.replace("/strategies");
       return;
     }
 
     const strategies = (data?.strategies ?? []) as StrategyItem[];
     const matchedStrategy = isEditing
-      ? strategies.find((strategy) => strategy.id === strategyId) ?? null
+      ? strategies.find((strategy) => strategy.id === selectedStrategyID) ?? null
       : null;
 
     setSelectedStrategy(matchedStrategy);
@@ -152,7 +153,7 @@ export default function CreateUpdateStrategy() {
     setValue("indicatorsUsed", formValues.indicatorsUsed, { shouldDirty: true, shouldValidate: true });
     setConditionInput("");
     setIndicatorInput("");
-  }, [data, isEditing, isLoadingStrategies, parsedStrategyId, reset, routeStrategyId, router, showToast, strategyId, setValue]);
+  }, [data, isEditing, isLoadingStrategies, reset, router, showToast, selectedStrategyID, setValue]);
 
   function handleAddCondition() {
     const trimmed = conditionInput.trim();

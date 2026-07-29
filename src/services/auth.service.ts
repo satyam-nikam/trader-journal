@@ -72,18 +72,31 @@ export const loginUser = async (
   await saveOTP(email, otp);
   console.log("Generated OTP:", otp);
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = new Resend(process.env.RESEND_API_KEY || "");
+  const senderEmail =
+    process.env.NODE_ENV === "production" && process.env.EMAIL_FROM
+      ? process.env.EMAIL_FROM
+      : "onboarding@resend.dev";
 
-resend.emails.send({
-  from: process.env.EMAIL_FROM!,
-  to: email,
-  subject: 'OTP Verification',
-  html: `<h2>Your OTP</h2>
+  try {
+    const emailResult = await resend.emails.send({
+      from: senderEmail,
+      to: [email],
+      subject: "OTP Verification",
+      html: `<h2>Your OTP</h2>
         <p>${otp}</p>
-        <p>Valid for 2 minutes.</p>`
-});
+        <p>Valid for 2 minutes.</p>`,
+    });
 
-console.log("OTP email sent to:", email);
+    if (emailResult.error) {
+      console.error("Resend email error:", emailResult.error);
+      throw new Error(emailResult.error.message || "Failed to send OTP email");
+    }
+
+  } catch (error) {
+    console.error("Failed to send OTP email:", error);
+    throw new Error("Failed to send OTP email. Please try again.");
+  }
 
   return {
     token,

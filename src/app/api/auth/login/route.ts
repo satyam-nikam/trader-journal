@@ -14,24 +14,12 @@ export async function POST(
         body.password
       );
 
-    const response =
-      NextResponse.json({
-        success: true,
-        user,
-      });
-
-    response.cookies.set(
-      "token",
+    return NextResponse.json({
+      success: true,
       token,
-      {
-        httpOnly: true,
-        maxAge:
-          60 * 60 * 24 * 7,
-        path: "/",
-      }
-    );
-
-    return response;
+      data: user,
+      requiresOtp: true,
+    });
   } catch (error) {
     return NextResponse.json(
       {

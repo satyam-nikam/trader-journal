@@ -1,23 +1,11 @@
 import { getAllRules } from "@/services/rules.service";
-import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  req: Request
-) {
+export async function GET(req: NextRequest) {
   try {
+    getAuthenticatedUser(req);
     const {rules, count} = await getAllRules();
-
-    if( count === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No rules found",
-        },
-        {
-          status: 404,
-        }
-      );
-    }
 
     return NextResponse.json({
       success: true,

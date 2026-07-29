@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { generateToken } from "@/lib/jwt";
 import { verifyOTP } from "@/services/auth.service";
 
 export async function POST(
@@ -8,13 +9,24 @@ export async function POST(
   try {
     const body = await req.json();
 
-    await verifyOTP(
+    const verifiedUser = await verifyOTP(
       body.email,
       body.otp
     );
-    return NextResponse.json({
+
+    const token = generateToken(verifiedUser.id);
+    const response = NextResponse.json({
       success: true,
+      data: verifiedUser,
     });
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+
+    return response;
 
   } catch (error) {
     return NextResponse.json(

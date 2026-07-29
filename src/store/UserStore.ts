@@ -7,7 +7,8 @@ interface UserStore {
   selectedStrategyID: number;
   setSelectedStrategyID: (strategyID: number) => void;
   selectedTradeID: number;
-  setSelectedTradeID: (strategyID: number) => void;
+  setSelectedTradeID: (tradeID: number) => void;
+  resetUser: () => void;
 }
 
 const useUserStore = create<UserStore>()(
@@ -19,6 +20,7 @@ const useUserStore = create<UserStore>()(
       setSelectedStrategyID: (strategyID) => set({ selectedStrategyID: strategyID }),
       selectedTradeID: 0,
       setSelectedTradeID: (tradeID) => set({ selectedTradeID: tradeID }),
+      resetUser: () => set({ UserID: 0, selectedStrategyID: 0, selectedTradeID: 0 }),
     }),
     {
       name: "UserStore",

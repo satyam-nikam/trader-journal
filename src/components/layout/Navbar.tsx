@@ -5,10 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { IoChevronDown } from "react-icons/io5";
 import { MdLogout } from "react-icons/md";
+import useUserStore from "@/store/UserStore";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { resetUser } = useUserStore();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -40,9 +42,12 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const logout = () => {
+  const logout = async () => {
     setIsProfileMenuOpen(false);
-    router.push("/login");
+    resetUser();
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
   };
 
   return (

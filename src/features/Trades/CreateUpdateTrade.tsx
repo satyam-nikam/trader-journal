@@ -3,8 +3,11 @@
 import Button from "@/components/common/Button";
 import DatePicker from "@/components/common/DatePicker";
 import Field from "@/components/common/Field";
+import ImageUpload from "@/components/common/ImageUpload";
 import MultiSelect from "@/components/common/MultiSelect";
 import Select from "@/components/common/Select";
+import { useGetAllRules } from "@/hooks/useRules";
+import { useGetAllStrategies } from "@/hooks/useStrategy";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { FaChartLine, FaRocket, FaShieldAlt } from "react-icons/fa";
@@ -26,27 +29,32 @@ interface TradeFormValues {
   strategy: string;
   rulesFollowed: string[];
   notes: string;
-  tradeImg: string;
+  tradeImg: string | File | null;
+}
+
+interface RuleItem {
+  id: number;
+  ruleNumber: string;
+  rule: string;
+  category: string;
+  status: string;
 }
 
 const tradeTypeOptions = [
-  { value: "long", label: "Long" },
-  { value: "short", label: "Short" },
+  { value: "intraday", label: "Intraday" },
+  { value: "Expiry", label: "Expiry" },
   { value: "swing", label: "Swing" },
-  { value: "day", label: "Day" },
+  { value: "longterm", label: "Long Term" },
 ];
 
 const positionOptions = [
-  { value: "buy", label: "Buy" },
-  { value: "sell", label: "Sell" },
-  { value: "flat", label: "Flat" },
+  { value: "long", label: "Long" },
+  { value: "short", label: "Short" },
 ];
 
 const tradeStatusOptions = [
-  { value: "planned", label: "Planned" },
   { value: "open", label: "Open" },
   { value: "closed", label: "Closed" },
-  { value: "paused", label: "Paused" },
 ];
 
 const resultOptions = [
@@ -56,17 +64,20 @@ const resultOptions = [
   { value: "pending", label: "Pending" },
 ];
 
-const ruleOptions = [
-  { value: "risk_management", label: "Risk management" },
-  { value: "trend_confirmation", label: "Trend confirmation" },
-  { value: "volume_confirmation", label: "Volume confirmation" },
-  { value: "stop_loss", label: "Stop loss" },
-  { value: "take_profit", label: "Take profit" },
-  { value: "journal_review", label: "Journal review" },
-];
-
 export default function CreateUpdateTrade() {
   const router = useRouter();
+  const { data: Rules, isPending: isLoadingRules} = useGetAllRules();
+  const { data: Strategies, isPending: isLoadingStrategies} = useGetAllStrategies();
+
+  const ruleOptions = Rules?.rules?.map((rule: RuleItem) => ({
+    value: rule.id,
+    label: rule.rule,
+  })) ?? [];
+
+  const strategyOptions = Strategies?.strategies?.map((strategy: any) => ({
+    value: strategy.id,
+    label: strategy.strategy,
+  })) ?? [];
 
   const {
     control,
@@ -91,7 +102,7 @@ export default function CreateUpdateTrade() {
       strategy: "",
       rulesFollowed: [],
       notes: "",
-      tradeImg: "",
+      tradeImg: null,
     },
   });
 
@@ -184,7 +195,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Trade type is required" }}
                 render={({ field }) => (
-                  <Field label="Trade type" htmlFor="tradeType" error={errors.tradeType?.message}>
+                  <Field
+                    label="Trade type"
+                    htmlFor="tradeType"
+                    error={errors.tradeType?.message}
+                  >
                     <Select
                       id="tradeType"
                       options={tradeTypeOptions}
@@ -201,7 +216,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Position is required" }}
                 render={({ field }) => (
-                  <Field label="Position" htmlFor="position" error={errors.position?.message}>
+                  <Field
+                    label="Position"
+                    htmlFor="position"
+                    error={errors.position?.message}
+                  >
                     <Select
                       id="position"
                       options={positionOptions}
@@ -218,7 +237,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Trade status is required" }}
                 render={({ field }) => (
-                  <Field label="Trade status" htmlFor="tradeStatus" error={errors.tradeStatus?.message}>
+                  <Field
+                    label="Trade status"
+                    htmlFor="tradeStatus"
+                    error={errors.tradeStatus?.message}
+                  >
                     <Select
                       id="tradeStatus"
                       options={tradeStatusOptions}
@@ -233,14 +256,20 @@ export default function CreateUpdateTrade() {
           </div>
 
           <div className="rounded-2xl border border-slate-300 bg-white p-4">
-            <div className="mb-4 text-sm font-semibold text-slate-700">Execution & risk</div>
+            <div className="mb-4 text-sm font-semibold text-slate-700">
+              Execution & risk
+            </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Controller
                 name="capitalUsed"
                 control={control}
                 rules={{ required: "Capital used is required" }}
                 render={({ field }) => (
-                  <Field label="Capital used" htmlFor="capitalUsed" error={errors.capitalUsed?.message}>
+                  <Field
+                    label="Capital used"
+                    htmlFor="capitalUsed"
+                    error={errors.capitalUsed?.message}
+                  >
                     <input
                       {...field}
                       id="capitalUsed"
@@ -249,7 +278,9 @@ export default function CreateUpdateTrade() {
                       step="0.01"
                       className="form-input"
                       value={field.value ?? 0}
-                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      onChange={(event) =>
+                        field.onChange(Number(event.target.value))
+                      }
                     />
                   </Field>
                 )}
@@ -260,7 +291,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Entry price is required" }}
                 render={({ field }) => (
-                  <Field label="Entry price" htmlFor="entryPrice" error={errors.entryPrice?.message}>
+                  <Field
+                    label="Entry price"
+                    htmlFor="entryPrice"
+                    error={errors.entryPrice?.message}
+                  >
                     <input
                       {...field}
                       id="entryPrice"
@@ -269,7 +304,9 @@ export default function CreateUpdateTrade() {
                       step="0.01"
                       className="form-input"
                       value={field.value ?? 0}
-                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      onChange={(event) =>
+                        field.onChange(Number(event.target.value))
+                      }
                     />
                   </Field>
                 )}
@@ -280,7 +317,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Exit price is required" }}
                 render={({ field }) => (
-                  <Field label="Exit price" htmlFor="exitPrice" error={errors.exitPrice?.message}>
+                  <Field
+                    label="Exit price"
+                    htmlFor="exitPrice"
+                    error={errors.exitPrice?.message}
+                  >
                     <input
                       {...field}
                       id="exitPrice"
@@ -289,7 +330,9 @@ export default function CreateUpdateTrade() {
                       step="0.01"
                       className="form-input"
                       value={field.value ?? 0}
-                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      onChange={(event) =>
+                        field.onChange(Number(event.target.value))
+                      }
                     />
                   </Field>
                 )}
@@ -300,7 +343,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Quantity is required" }}
                 render={({ field }) => (
-                  <Field label="Quantity" htmlFor="qty" error={errors.qty?.message}>
+                  <Field
+                    label="Quantity"
+                    htmlFor="qty"
+                    error={errors.qty?.message}
+                  >
                     <input
                       {...field}
                       id="qty"
@@ -309,7 +356,9 @@ export default function CreateUpdateTrade() {
                       step="1"
                       className="form-input"
                       value={field.value ?? 0}
-                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      onChange={(event) =>
+                        field.onChange(Number(event.target.value))
+                      }
                     />
                   </Field>
                 )}
@@ -330,7 +379,9 @@ export default function CreateUpdateTrade() {
                       step="0.01"
                       className="form-input"
                       value={field.value ?? 0}
-                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      onChange={(event) =>
+                        field.onChange(Number(event.target.value))
+                      }
                     />
                   </Field>
                 )}
@@ -349,7 +400,9 @@ export default function CreateUpdateTrade() {
                       step="0.01"
                       className="form-input"
                       value={field.value ?? 0}
-                      onChange={(event) => field.onChange(Number(event.target.value))}
+                      onChange={(event) =>
+                        field.onChange(Number(event.target.value))
+                      }
                     />
                   </Field>
                 )}
@@ -360,7 +413,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Result is required" }}
                 render={({ field }) => (
-                  <Field label="Result" htmlFor="result" error={errors.result?.message}>
+                  <Field
+                    label="Result"
+                    htmlFor="result"
+                    error={errors.result?.message}
+                  >
                     <Select
                       id="result"
                       options={resultOptions}
@@ -381,7 +438,11 @@ export default function CreateUpdateTrade() {
                 control={control}
                 rules={{ required: "Strategy is required" }}
                 render={({ field }) => (
-                  <Field label="Strategy" htmlFor="strategy" error={errors.strategy?.message}>
+                  <Field
+                    label="Strategy"
+                    htmlFor="strategy"
+                    error={errors.strategy?.message}
+                  >
                     <input
                       {...field}
                       id="strategy"
@@ -394,6 +455,22 @@ export default function CreateUpdateTrade() {
               />
 
               <Controller
+                name="rulesFollowed"
+                control={control}
+                render={({ field }) => (
+                  <div className="relative">
+                    <MultiSelect
+                      label="Rules followed"
+                      options={ruleOptions}
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      placeholder="Select rules"
+                    />
+                  </div>
+                )}
+              />
+
+              {/* <Controller
                 name="tradeImg"
                 control={control}
                 render={({ field }) => (
@@ -407,28 +484,24 @@ export default function CreateUpdateTrade() {
                     />
                   </Field>
                 )}
-              />
+              /> */}
             </div>
 
-            <div className="mt-4">
+            <div className="grid gap-4 lg:grid-cols-2 mt-4">
               <Controller
-                name="rulesFollowed"
+                name="tradeImg"
                 control={control}
                 render={({ field }) => (
-                  <div className="relative">
-                    <MultiSelect
-                    label="Rules followed"
-                    options={ruleOptions}
-                    value={field.value ?? []}
-                    onChange={field.onChange}
-                    placeholder="Select rules"
+                  <ImageUpload
+                    label="Trade image"
+                    name="tradeImg"
+                    value={field.value ?? null}
+                    onChange={(file) => field.onChange(file)}
+                    error={errors.tradeImg?.message}
                   />
-                  </div>
                 )}
               />
-            </div>
 
-            <div className="mt-4">
               <Controller
                 name="notes"
                 control={control}
@@ -446,9 +519,7 @@ export default function CreateUpdateTrade() {
                 )}
               />
             </div>
-          </div>
-
-          <div className="mt-2 flex flex-wrap justify-center gap-2 border-t border-slate-300 pt-4">
+            <div className="mt-2 flex flex-wrap justify-center gap-2 border-t border-slate-300 pt-4">
             <Button
               type="button"
               btnType="danger"
@@ -463,6 +534,10 @@ export default function CreateUpdateTrade() {
             />
             <Button type="submit" text="Save trade" disabled={isSubmitting} />
           </div>
+
+          </div>
+
+          
         </form>
       </div>
     </div>

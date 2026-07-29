@@ -27,10 +27,9 @@ type Strategies = {
 
 export default function Strategies() {
   const router = useRouter();
-  const { setSelectedStrategyID } = useUserStore();
+  const { selectedStrategyID, setSelectedStrategyID } = useUserStore();
   const { showToast } = useToast();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedStrategy, setSelectedStrategy] = useState<Strategies | null>(null);
   const { mutate: deleteStrategyMutate, isPending: isDeleting } = useDeleteStrategy();
   const { data, isPending: isLoadingStrategies, refetch } = useGetAllStrategies();
   const strategies = (data?.strategies ?? []) as Strategies[];
@@ -73,7 +72,7 @@ export default function Strategies() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-4">
-          <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="View strategy">
+          {/* <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="View strategy">
             <MdOutlineRemoveRedEye
               color="#0D4EAF"
               size={18}
@@ -81,13 +80,13 @@ export default function Strategies() {
                 setSelectedStrategyID(row.original.id);
               }}
             />
-          </button>
+          </button> */}
           <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Edit strategy">
             <BiSolidEditAlt
               size={20}
               onClick={() => {
                 setSelectedStrategyID(row.original.id);
-                router.push(`/strategies/id/${row.original.id}`);
+                // router.push(`/strategies/id/${row.original.id}`);
               }}
             />
           </button>
@@ -97,7 +96,6 @@ export default function Strategies() {
               size={18}
               onClick={() => {
                 setSelectedStrategyID(row.original.id);
-                setSelectedStrategy(row.original);
                 setDeleteModalOpen(true);
               }}
             />
@@ -108,16 +106,16 @@ export default function Strategies() {
   ];
 
   const onDelete = () => {
-    if (!selectedStrategy?.id) {
+    if (!selectedStrategyID) {
       setDeleteModalOpen(false);
       return;
     }
 
-    deleteStrategyMutate(selectedStrategy.id, {
+    deleteStrategyMutate(selectedStrategyID, {
       onSuccess: (response: any) => {
         showToast("success", response?.message || "Strategy deleted successfully");
         setDeleteModalOpen(false);
-        setSelectedStrategy(null);
+        setSelectedStrategyID(0);
         refetch();
       },
       onError: (error: any) => {
@@ -173,7 +171,7 @@ export default function Strategies() {
           isOpen={deleteModalOpen}
           onClose={() => {
             setDeleteModalOpen(false);
-            setSelectedStrategy(null);
+            setSelectedStrategyID(0);
           }}
           onDelete={onDelete}
         />

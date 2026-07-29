@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { saveStrategy } from "@/services/strategy.service";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    const request = req as Request & { cookies?: { get: (name: string) => { value: string } | undefined } };
+    getAuthenticatedUser(request as never);
     const body = await req.json();
 
     const newRule = await saveStrategy(
