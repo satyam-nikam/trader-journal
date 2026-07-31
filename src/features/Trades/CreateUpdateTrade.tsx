@@ -17,6 +17,7 @@ interface TradeFormValues {
   fromDate: string;
   toDate: string;
   tradeType: string;
+  instrumentType: string;
   position: string;
   capitalUsed: number;
   entryPrice: number;
@@ -64,6 +65,14 @@ const resultOptions = [
   { value: "pending", label: "Pending" },
 ];
 
+const instrumentTypeOptions = [
+  { value: "equity", label: "Equity" },
+  { value: "futures", label: "Futures" },
+  { value: "options", label: "Options" },
+  { value: "forex", label: "Forex" },
+  { value: "crypto", label: "Crypto" },
+];
+
 export default function CreateUpdateTrade() {
   const router = useRouter();
   const { data: Rules, isPending: isLoadingRules} = useGetAllRules();
@@ -76,7 +85,7 @@ export default function CreateUpdateTrade() {
 
   const strategyOptions = Strategies?.strategies?.map((strategy: any) => ({
     value: strategy.id,
-    label: strategy.strategy,
+    label: strategy.name,
   })) ?? [];
 
   const {
@@ -90,6 +99,7 @@ export default function CreateUpdateTrade() {
       fromDate: "",
       toDate: "",
       tradeType: "",
+      instrumentType: "",
       position: "",
       capitalUsed: 0,
       entryPrice: 0,
@@ -212,6 +222,23 @@ export default function CreateUpdateTrade() {
               />
 
               <Controller
+                            name="instrumentType"
+                            control={control}
+                            render={({ field }) => (
+                              <Field label="Instrument type" htmlFor="instrumentType">
+                                <Select
+                                  id="instrumentType"
+                                  label=""
+                                  options={instrumentTypeOptions}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  placeholder="Select instrument…"
+                                />
+                              </Field>
+                            )}
+                          />
+
+              <Controller
                 name="position"
                 control={control}
                 rules={{ required: "Position is required" }}
@@ -227,27 +254,6 @@ export default function CreateUpdateTrade() {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select position"
-                    />
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="tradeStatus"
-                control={control}
-                rules={{ required: "Trade status is required" }}
-                render={({ field }) => (
-                  <Field
-                    label="Trade status"
-                    htmlFor="tradeStatus"
-                    error={errors.tradeStatus?.message}
-                  >
-                    <Select
-                      id="tradeStatus"
-                      options={tradeStatusOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Select status"
                     />
                   </Field>
                 )}
@@ -365,7 +371,7 @@ export default function CreateUpdateTrade() {
               />
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Controller
                 name="riskReward"
                 control={control}
@@ -428,12 +434,33 @@ export default function CreateUpdateTrade() {
                   </Field>
                 )}
               />
+
+              <Controller
+                name="tradeStatus"
+                control={control}
+                rules={{ required: "Trade status is required" }}
+                render={({ field }) => (
+                  <Field
+                    label="Trade status"
+                    htmlFor="tradeStatus"
+                    error={errors.tradeStatus?.message}
+                  >
+                    <Select
+                      id="tradeStatus"
+                      options={tradeStatusOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select status"
+                    />
+                  </Field>
+                )}
+              />
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
             <div className="grid gap-4 lg:grid-cols-2">
-              <Controller
+              {/* <Controller
                 name="strategy"
                 control={control}
                 rules={{ required: "Strategy is required" }}
@@ -449,6 +476,26 @@ export default function CreateUpdateTrade() {
                       type="text"
                       placeholder="e.g. Breakout momentum v2"
                       className="form-input"
+                    />
+                  </Field>
+                )}
+              /> */}
+                <Controller
+                name="strategy"
+                control={control}
+                rules={{ required: "Strategy is required" }}
+                render={({ field }) => (
+                  <Field
+                    label="Strategy Used"
+                    htmlFor="strategy"
+                    error={errors.strategy?.message}
+                  >
+                    <Select
+                      id="strategy"
+                      options={strategyOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select strategy"
                     />
                   </Field>
                 )}

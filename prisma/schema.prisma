@@ -36,3 +36,25 @@ model Strategy {
   entryConditions Json
   indicatorsUsed  Json
 }
+
+model Trade {
+  id             Int      @id @default(autoincrement())
+  entryDate      String?
+  fromDate       String?
+  toDate         String?
+  tradeType      String?
+  instrumentType String?
+  position       String?
+  capitalUsed    Float?
+  entryPrice     Float?
+  exitPrice      Float?
+  qty            Int?
+  riskReward     Float?
+  totalPnl       Float?
+  tradeStatus    String?
+  result         String?
+  strategy       String?
+  rulesFollowed  Json?
+  notes          String?
+  tradeImg       String?
+}
