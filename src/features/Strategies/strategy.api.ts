@@ -1,16 +1,4 @@
-export interface StrategyPayload {
-  name: string;
-  strategyType: string;
-  instrumentType: string;
-  description: string;
-  timeFrame: string[];
-  entryConditions: string[];
-  indicatorsUsed: string[];
-}
-
-export interface StrategyUpdatePayload extends StrategyPayload {
-  id: number;
-}
+import { StrategyPayload, StrategyUpdatePayload } from "@/types/strategy.types";
 
 export const saveStrategyApi = async (data: StrategyPayload) => {
   const res = await fetch("/api/strategy/createStrategy", {
