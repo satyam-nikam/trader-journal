@@ -1,8 +1,11 @@
 "use client";
 
 import Button from "@/components/common/Button";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
+import Spinner from "@/components/common/Spinner";
 import CommonTable from "@/components/common/Table";
-import { useGetAllTrades } from "@/hooks/useTrade";
+import { useToast } from "@/components/common/ToastProvider";
+import { useDeleteTrade, useGetAllTrades } from "@/hooks/useTrade";
 import useUserStore from "@/store/UserStore";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
@@ -138,146 +141,183 @@ const trades: Trade[] = [
 ];
 
 export default function Trades() {
-  const { UserID } = useUserStore();
+  const { UserID, selectedTradeID, setSelectedTradeID } = useUserStore();
+  const router = useRouter();
+  const { showToast } = useToast();
+  const { mutate: deleteTradeMutate, isPending: isDeleting } = useDeleteTrade();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const { data, isLoading, isError } = useGetAllTrades({ userId: UserID });
+  const {
+    data: tradesData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAllTrades({ userId: UserID });
+  const loading = isLoading || isDeleting;
 
   const tradeColumns: ColumnDef<Trade>[] = [
-  {
-    accessorKey: "date",
-    header: "Date",
-    cell: ({ getValue }) =>
-      new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }).format(new Date(getValue<string>())),
-  },
-  {
-    accessorKey: "symbol",
-    header: "Symbol",
-    cell: ({ getValue }) => (
-      <span className="font-semibold text-[#2c2c2c]">{getValue<string>()}</span>
-    ),
-  },
-  {
-    accessorKey: "setup",
-    header: "Setup",
-  },
-  {
-    accessorKey: "side",
-    header: "Side",
-    cell: ({ getValue }) => {
-      const side = getValue<Trade["side"]>();
-
-      return (
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-            side === "Long"
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-rose-50 text-rose-700"
-          }`}
-        >
-          {side}
-        </span>
-      );
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ getValue }) =>
+        new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }).format(new Date(getValue<string>())),
     },
-  },
-  {
-    accessorKey: "entry",
-    header: "Entry",
-    cell: ({ getValue }) => currencyFormatter.format(getValue<number>()),
-  },
-  {
-    accessorKey: "exit",
-    header: "Exit",
-    cell: ({ getValue }) => currencyFormatter.format(getValue<number>()),
-  },
-  {
-    accessorKey: "quantity",
-    header: "Qty",
-  },
-  {
-    accessorKey: "pnl",
-    header: "P&L",
-    cell: ({ getValue }) => {
-      const pnl = getValue<number>();
-
-      return (
-        <span
-          className={`font-semibold ${
-            pnl >= 0 ? "text-emerald-700" : "text-rose-700"
-          }`}
-        >
-          {currencyFormatter.format(pnl)}
+    {
+      accessorKey: "symbol",
+      header: "Symbol",
+      cell: ({ getValue }) => (
+        <span className="font-semibold text-[#2c2c2c]">
+          {getValue<string>()}
         </span>
-      );
+      ),
     },
-  },
-  {
-    accessorKey: "rMultiple",
-    header: "R",
-    cell: ({ getValue }) => `${numberFormatter.format(getValue<number>())}R`,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ getValue }) => {
-      const status = getValue<Trade["status"]>();
-      const styles = {
-        Win: "bg-emerald-100 text-emerald-800",
-        Loss: "bg-rose-100 text-rose-800",
-        Breakeven: "bg-gray-100 text-gray-700",
-      };
+    {
+      accessorKey: "setup",
+      header: "Setup",
+    },
+    {
+      accessorKey: "side",
+      header: "Side",
+      cell: ({ getValue }) => {
+        const side = getValue<Trade["side"]>();
 
-      return (
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status]}`}
-        >
-          {status}
-        </span>
-      );
-    },
-  },
-  {
-        accessorKey: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex gap-4">
-            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="View trade">
-              <MdOutlineRemoveRedEye
-                color="#0D4EAF"
-                size={18}
-                onClick={() => {
-                  setSelectedTradeID(row.original.id);
-                }}
-              />
-            </button>
-            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Edit trade">
-              <BiSolidEditAlt
-                size={20}
-                onClick={() => {
-                  setSelectedTradeID(row.original.id);
-                }}
-              />
-            </button>
-            <button className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100" aria-label="Delete trade">
-              <FaTrash
-                color="#dc3545"
-                size={18}
-                onClick={() => {
-                  setSelectedTradeID(row.original.id);
-                  setDeleteModalOpen(true);
-                }}
-              />
-            </button>
-          </div>
-        ),
+        return (
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              side === "Long"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-rose-50 text-rose-700"
+            }`}
+          >
+            {side}
+          </span>
+        );
       },
-];
+    },
+    {
+      accessorKey: "entry",
+      header: "Entry",
+      cell: ({ getValue }) => currencyFormatter.format(getValue<number>()),
+    },
+    {
+      accessorKey: "exit",
+      header: "Exit",
+      cell: ({ getValue }) => currencyFormatter.format(getValue<number>()),
+    },
+    {
+      accessorKey: "quantity",
+      header: "Qty",
+    },
+    {
+      accessorKey: "pnl",
+      header: "P&L",
+      cell: ({ getValue }) => {
+        const pnl = getValue<number>();
 
-  const { setSelectedTradeID } = useUserStore();
-  const router = useRouter();
+        return (
+          <span
+            className={`font-semibold ${
+              pnl >= 0 ? "text-emerald-700" : "text-rose-700"
+            }`}
+          >
+            {currencyFormatter.format(pnl)}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "rMultiple",
+      header: "R",
+      cell: ({ getValue }) => `${numberFormatter.format(getValue<number>())}R`,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ getValue }) => {
+        const status = getValue<Trade["status"]>();
+        const styles = {
+          Win: "bg-emerald-100 text-emerald-800",
+          Loss: "bg-rose-100 text-rose-800",
+          Breakeven: "bg-gray-100 text-gray-700",
+        };
+
+        return (
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status]}`}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex gap-4">
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100"
+            aria-label="View trade"
+          >
+            <MdOutlineRemoveRedEye
+              color="#0D4EAF"
+              size={18}
+              onClick={() => {
+                setSelectedTradeID(row.original.id);
+              }}
+            />
+          </button>
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100"
+            aria-label="Edit trade"
+          >
+            <BiSolidEditAlt
+              size={20}
+              onClick={() => {
+                setSelectedTradeID(row.original.id);
+              }}
+            />
+          </button>
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100"
+            aria-label="Delete trade"
+          >
+            <FaTrash
+              color="#dc3545"
+              size={18}
+              onClick={() => {
+                setSelectedTradeID(row.original.id);
+                setDeleteModalOpen(true);
+              }}
+            />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const onDelete = () => {
+    if (selectedTradeID === 0) {
+      setDeleteModalOpen(false);
+      return;
+    }
+
+    deleteTradeMutate(selectedTradeID, {
+      onSuccess: (response: any) => {
+        showToast("success", response?.message || "Trade deleted successfully");
+        setDeleteModalOpen(false);
+        setSelectedTradeID(0);
+        refetch();
+      },
+      onError: (error: any) => {
+        const message = error?.message || "Unable to delete trade";
+        showToast("error", message);
+      },
+    });
+  };
 
   return (
     <section className="space-y-5">
@@ -300,14 +340,27 @@ export default function Trades() {
         />
       </div>
 
+      {loading && <Spinner />}
+
       <CommonTable
-        data={trades}
+        data={tradesData?.trades || []}
         columns={tradeColumns}
-        pageSize={5}
+        pageSize={10}
         enableSorting
         enablePagination
         enableRowSelection
       />
+
+      {deleteModalOpen && (
+        <ConfirmDeleteModal
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedTradeID(0);
+          }}
+          onDelete={onDelete}
+        />
+      )}
     </section>
   );
 }

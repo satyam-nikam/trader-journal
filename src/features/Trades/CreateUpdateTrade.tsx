@@ -6,10 +6,14 @@ import Field from "@/components/common/Field";
 import ImageUpload from "@/components/common/ImageUpload";
 import MultiSelect from "@/components/common/MultiSelect";
 import Select from "@/components/common/Select";
+import Spinner from "@/components/common/Spinner";
+import { useToast } from "@/components/common/ToastProvider";
 import { useGetAllRules } from "@/hooks/useRules";
 import { useGetAllStrategies } from "@/hooks/useStrategy";
+import { useGetTradeById, useSaveTrade, useUpdateTrade } from "@/hooks/useTrade";
 import useUserStore from "@/store/UserStore";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaChartLine, FaRocket, FaShieldAlt } from "react-icons/fa";
 
@@ -31,7 +35,7 @@ interface TradeFormValues {
   strategy: string;
   rulesFollowed: string[];
   notes: string;
-  tradeImg: string | File | null;
+  tradeImg: string;
 }
 
 interface RuleItem {
@@ -76,19 +80,26 @@ const instrumentTypeOptions = [
 
 export default function CreateUpdateTrade() {
   const router = useRouter();
-  const { UserID } = useUserStore();
-  const { data: Rules, isPending: isLoadingRules} = useGetAllRules({ userId: UserID });
-  const { data: Strategies, isPending: isLoadingStrategies} = useGetAllStrategies({ userId: UserID });
+  const { showToast } = useToast();
+  const { UserID, selectedTradeID } = useUserStore();
+  const { data: Rules, isPending: isLoadingRules } = useGetAllRules({ userId: UserID, });
+  const { data: Strategies, isPending: isLoadingStrategies } = useGetAllStrategies({ userId: UserID });
+  const { mutate: saveTradeMutate, isPending: isSaving } = useSaveTrade();
+    const { mutate: updateTradeMutate, isPending: isUpdating } = useUpdateTrade();
+  const { data: tradeData, isPending: isLoadingTradeData } = useGetTradeById({ tradeId: selectedTradeID, userId: UserID });
+  const loading = isLoadingRules || isLoadingStrategies || isLoadingTradeData;
 
-  const ruleOptions = Rules?.rules?.map((rule: RuleItem) => ({
-    value: rule.id,
-    label: rule.rule,
-  })) ?? [];
+  const ruleOptions =
+    Rules?.rules?.map((rule: RuleItem) => ({
+      value: rule.id,
+      label: rule.rule,
+    })) ?? [];
 
-  const strategyOptions = Strategies?.strategies?.map((strategy: any) => ({
-    value: strategy.id,
-    label: strategy.name,
-  })) ?? [];
+  const strategyOptions =
+    Strategies?.strategies?.map((strategy: any) => ({
+      value: strategy.id,
+      label: strategy.name,
+    })) ?? [];
 
   const {
     control,
@@ -114,12 +125,109 @@ export default function CreateUpdateTrade() {
       strategy: "",
       rulesFollowed: [],
       notes: "",
-      tradeImg: null,
+      tradeImg: "",
     },
   });
 
+  useEffect(() => {
+    if(selectedTradeID > 0 && tradeData) {
+      reset({
+        entryDate: tradeData.entryDate,
+        fromDate: tradeData.fromDate,
+        toDate: tradeData.toDate,
+        tradeType: tradeData.tradeType,
+        instrumentType: tradeData.instrumentType,
+        position: tradeData.position,
+        capitalUsed: tradeData.capitalUsed,
+        entryPrice: tradeData.entryPrice,
+        exitPrice: tradeData.exitPrice,
+        qty: tradeData.qty,
+        riskReward: tradeData.riskReward,
+        totalPnl: tradeData.totalPnl,
+        tradeStatus: tradeData.tradeStatus,
+        result: tradeData.result,
+        strategy: tradeData.strategy,
+        rulesFollowed: tradeData.rulesFollowed,
+        notes: tradeData.notes,
+        tradeImg: tradeData.tradeImg
+      })
+    } else{
+      reset({
+        entryDate: "",
+        fromDate: "",
+        toDate: "",
+        tradeType: "",
+        instrumentType: "",
+        position: "",
+        capitalUsed: 0,
+        entryPrice: 0,
+        exitPrice: 0,
+        qty: 0,
+        riskReward: 0,
+        totalPnl: 0,
+        tradeStatus: "",
+        result: "",
+        strategy: "",
+        rulesFollowed: [],
+        notes: "",
+        tradeImg: ""
+      })
+    }
+  }, [tradeData, reset, selectedTradeID])
+
   function onSubmit(data: TradeFormValues) {
     console.log(data);
+
+    const payload = {
+      entryDate: data.entryDate,
+      fromDate: data.fromDate,
+      toDate: data.toDate,
+      tradeType: data.tradeType,
+      instrumentType: data.instrumentType,
+      position: data.position,
+      capitalUsed: data.capitalUsed,
+      entryPrice: data.entryPrice,
+      exitPrice: data.exitPrice,
+      qty: data.qty,
+      riskReward: data.riskReward,
+      totalPnl: data.totalPnl,
+      tradeStatus: data.tradeStatus,
+      result: data.result,
+      strategy: data.strategy,
+      rulesFollowed: data.rulesFollowed,
+      notes: data.notes,
+      tradeImg: data.tradeImg
+    };
+
+    if (selectedTradeID > 0) {
+      updateTradeMutate(
+        { id: selectedTradeID, ...payload },
+        {
+          onSuccess: (response: any) => {
+            showToast("success", response?.message || "Trade updated successfully");
+            // refetch();
+            router.push("/trades");
+          },
+          onError: (error: any) => {
+            const message = error?.message || "Unable to update trade";
+            showToast("error", message);
+          },
+        },
+      );
+      return;
+    }
+
+    saveTradeMutate({ userId: UserID, ...payload }, {
+      onSuccess: (response: any) => {
+        showToast("success", response?.message || "Trade saved successfully");
+        // refetch();
+        router.push("/trades");
+      },
+      onError: (error: any) => {
+        const message = error?.message || "Unable to save trade";
+        showToast("error", message);
+      },
+    });
   }
 
   return (
@@ -150,6 +258,7 @@ export default function CreateUpdateTrade() {
           className="flex flex-col gap-5 px-6 py-6"
           onSubmit={handleSubmit(onSubmit)}
         >
+          {loading && <Spinner />}
           <div className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
             <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
               <FaShieldAlt className="text-blue-500" />
@@ -224,21 +333,21 @@ export default function CreateUpdateTrade() {
               />
 
               <Controller
-                            name="instrumentType"
-                            control={control}
-                            render={({ field }) => (
-                              <Field label="Instrument type" htmlFor="instrumentType">
-                                <Select
-                                  id="instrumentType"
-                                  label=""
-                                  options={instrumentTypeOptions}
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  placeholder="Select instrument…"
-                                />
-                              </Field>
-                            )}
-                          />
+                name="instrumentType"
+                control={control}
+                render={({ field }) => (
+                  <Field label="Instrument type" htmlFor="instrumentType">
+                    <Select
+                      id="instrumentType"
+                      label=""
+                      options={instrumentTypeOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select instrument…"
+                    />
+                  </Field>
+                )}
+              />
 
               <Controller
                 name="position"
@@ -462,27 +571,7 @@ export default function CreateUpdateTrade() {
 
           <div className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
             <div className="grid gap-4 lg:grid-cols-2">
-              {/* <Controller
-                name="strategy"
-                control={control}
-                rules={{ required: "Strategy is required" }}
-                render={({ field }) => (
-                  <Field
-                    label="Strategy"
-                    htmlFor="strategy"
-                    error={errors.strategy?.message}
-                  >
-                    <input
-                      {...field}
-                      id="strategy"
-                      type="text"
-                      placeholder="e.g. Breakout momentum v2"
-                      className="form-input"
-                    />
-                  </Field>
-                )}
-              /> */}
-                <Controller
+              <Controller
                 name="strategy"
                 control={control}
                 rules={{ required: "Strategy is required" }}
@@ -518,22 +607,6 @@ export default function CreateUpdateTrade() {
                   </div>
                 )}
               />
-
-              {/* <Controller
-                name="tradeImg"
-                control={control}
-                render={({ field }) => (
-                  <Field label="Trade image" htmlFor="tradeImg">
-                    <input
-                      {...field}
-                      id="tradeImg"
-                      type="text"
-                      placeholder="Image URL or reference"
-                      className="form-input"
-                    />
-                  </Field>
-                )}
-              /> */}
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2 mt-4">
@@ -569,24 +642,21 @@ export default function CreateUpdateTrade() {
               />
             </div>
             <div className="mt-2 flex flex-wrap justify-center gap-2 border-t border-slate-300 pt-4">
-            <Button
-              type="button"
-              btnType="danger"
-              text="Cancel"
-              onClick={router.back}
-            />
-            <Button
-              type="button"
-              btnType="secondary"
-              text="Clear All"
-              onClick={() => reset()}
-            />
-            <Button type="submit" text="Save trade" disabled={isSubmitting} />
+              <Button
+                type="button"
+                btnType="danger"
+                text="Cancel"
+                onClick={router.back}
+              />
+              <Button
+                type="button"
+                btnType="secondary"
+                text="Clear All"
+                onClick={() => reset()}
+              />
+              <Button type="submit" text="Save trade" disabled={isSubmitting} />
+            </div>
           </div>
-
-          </div>
-
-          
         </form>
       </div>
     </div>

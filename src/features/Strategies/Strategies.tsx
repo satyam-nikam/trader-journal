@@ -106,7 +106,7 @@ export default function Strategies() {
   ];
 
   const onDelete = () => {
-    if (!selectedStrategyID) {
+    if (selectedStrategyID === 0) {
       setDeleteModalOpen(false);
       return;
     }

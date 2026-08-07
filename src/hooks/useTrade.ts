@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { deleteTradeApi, getAllTradesApi, getTradeByIdApi, SaveTradeApi, updateTradeApi } from "@/features/Trades/trades.api";
+import { GetTradeByIdPayload } from "@/types/trade.types";
 
 export const useSaveTrade = () => {
   return useMutation({
@@ -13,9 +14,11 @@ export const useUpdateTrade = () => {
   });
 };
 
-export const useGetTradeById = () => {
-  return useMutation({
-    mutationFn: getTradeByIdApi,
+export const useGetTradeById = (requestData: GetTradeByIdPayload) => {
+  return useQuery({
+    queryKey: ["trades", requestData.userId, requestData.tradeId],
+    queryFn: () => getTradeByIdApi(requestData),
+    enabled: !!requestData,
   });
 };
 

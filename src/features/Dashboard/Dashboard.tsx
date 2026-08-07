@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { FiArrowUpRight, FiArrowDownRight, FiDollarSign, FiBarChart2, FiTrendingUp, FiTarget, FiShield } from "react-icons/fi";
 import Graph from "@/components/common/Graph";
+import useUserStore from "@/store/UserStore";
+import { useGetDashboardData } from "@/hooks/useDashboard";
 
 const FILTERS = [
   { key: "10trades", label: "Last 10 trades" },
@@ -182,7 +184,10 @@ function formatCurrency(value: number) {
 }
 
 export default function Dashboard() {
+  const { UserID } = useUserStore();
+  const { data: dashboardData, isPending: isLoadingDashboard, refetch } = useGetDashboardData({ userId: UserID, startDate: "2026-01-01", endDate: "2026-12-31", tradeCount: 10 });
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>("30days");
+  console.log("Dashboard data from API:", dashboardData);
 
   const currentData = useMemo(() => analyticsData[selectedFilter], [selectedFilter]);
 

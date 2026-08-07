@@ -1,4 +1,4 @@
-import { TradePayload, TradeUpdatePayload } from "@/types/trade.types";
+import { GetTradeByIdPayload, TradePayload, TradeUpdatePayload } from "@/types/trade.types";
 
 export const SaveTradeApi = async (data: TradePayload) => {
   const res = await fetch("/api/trade/createTrade", {
@@ -46,13 +46,13 @@ export const deleteTradeApi = async (id: number) => {
   return res.json();
 };
 
-export const getTradeByIdApi = async (id: number) => {
+export const getTradeByIdApi = async (requestData: GetTradeByIdPayload) => {
   const res = await fetch(`/api/trade/getTradeById`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ id }),
+    body: JSON.stringify({ userId: requestData.userId, tradeId: requestData.tradeId }),
   });
   return res.json();
 };
