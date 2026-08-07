@@ -19,6 +19,7 @@ export const saveTrade = async (
   rulesFollowed: string[],
   notes: string,
   tradeImg: string,
+  userId: number
 ) => {
   const newTrade = await prisma.trade.create({
     data: {
@@ -40,6 +41,7 @@ export const saveTrade = async (
       rulesFollowed,
       notes,
       tradeImg,
+      userId,
     },
   });
 
@@ -134,11 +136,18 @@ export const getTradeById = async (id: number) => {
   return trade;
 }
 
-export const getAllTrades = async () => {
+export const getAllTrades = async (userId: number) => {
 
-  const tradesCount = await prisma.trade.count();
+  const tradesCount = await prisma.trade.count({
+    where: {
+      userId,
+    },
+  });
 
   const trades = await prisma.trade.findMany({
+    where: {
+      userId,
+    },
     orderBy: {
       id: "asc",
     },

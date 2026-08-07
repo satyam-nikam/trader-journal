@@ -19,10 +19,10 @@ export const useGetTradeById = () => {
   });
 };
 
-export const useGetAllTrades = () => {
+export const useGetAllTrades = (requestData: { userId: number }) => {
   return useQuery({
-    queryKey: ["trades"],
-    queryFn: getAllTradesApi,
+    queryKey: ["trades", requestData.userId],
+    queryFn: () => getAllTradesApi(requestData.userId),
   });
 };
 

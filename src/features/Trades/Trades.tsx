@@ -2,6 +2,7 @@
 
 import Button from "@/components/common/Button";
 import CommonTable from "@/components/common/Table";
+import { useGetAllTrades } from "@/hooks/useTrade";
 import useUserStore from "@/store/UserStore";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
@@ -137,7 +138,9 @@ const trades: Trade[] = [
 ];
 
 export default function Trades() {
+  const { UserID } = useUserStore();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const { data, isLoading, isError } = useGetAllTrades({ userId: UserID });
 
   const tradeColumns: ColumnDef<Trade>[] = [
   {

@@ -12,12 +12,13 @@ export const SaveTradeApi = async (data: TradePayload) => {
   return res.json();
 };
 
-export const getAllTradesApi = async () => {
+export const getAllTradesApi = async (userId: number) => {
   const res = await fetch("/api/trade/getAllTrades", {
-    method: "GET",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({ userId }),
   });
   return res.json();
 };

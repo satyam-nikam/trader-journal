@@ -24,6 +24,7 @@ model Rules {
   rule               String
   category           String
   status             String
+  userId             Int
 }
 
 model Strategy {
@@ -35,6 +36,7 @@ model Strategy {
   timeFrame       Json
   entryConditions Json
   indicatorsUsed  Json
+  userId          Int
 }
 
 model Trade {
@@ -57,4 +59,5 @@ model Trade {
   rulesFollowed  Json?
   notes          String?
   tradeImg       String?
+  userId         Int
 }

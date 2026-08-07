@@ -2,10 +2,11 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { getAllTrades } from "@/services/trades.service";
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         getAuthenticatedUser(req);
-        const { trades, count } = await getAllTrades();
+        const body = await req.json();
+        const { trades, count } = await getAllTrades(body.userId);
 
         return new Response(
             JSON.stringify({
