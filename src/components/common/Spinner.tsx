@@ -11,13 +11,29 @@ export default function Spinner({ size = 40, className = "", fullscreen = true }
   const barWidth = Math.max(4, Math.round(size / 6));
   const gap = Math.max(6, Math.round(size / 8));
 
-  const spinner = (
-    <div className={`spinner ${className}`} role="status" aria-label="Loading">
-      <div className="bar b1" />
-      <div className="bar b2" />
-      <div className="bar b3" />
+  const spinnerStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "flex-end",
+    gap: `${gap}px`,
+    height: `${size}px`,
+    zIndex: 50,
+  };
 
-      <style jsx>{`
+  const barStyle = (height: string, delay: number): React.CSSProperties => ({
+    width: `${barWidth}px`,
+    borderRadius: 4,
+    transformOrigin: "bottom",
+    animation: "updown 900ms cubic-bezier(.2,.6,.2,1) infinite",
+    animationDelay: `${delay}ms`,
+    height,
+  });
+
+  const spinner = (
+    <div className={`spinner ${className}`.trim()} style={spinnerStyle} role="status" aria-label="Loading">
+      <div style={{ ...barStyle("90%", 0), background: "#e63946" }} />
+      <div style={{ ...barStyle("65%", 150), background: "#2a9d8f" }} />
+      <div style={{ ...barStyle("50%", 300), background: "#f4a261" }} />
+      <style>{`
         .spinner {
           display: flex;
           align-items: flex-end;
@@ -26,29 +42,11 @@ export default function Spinner({ size = 40, className = "", fullscreen = true }
           z-index: 50;
         }
 
-        .bar {
+        .spinner > div {
           width: ${barWidth}px;
           border-radius: 4px;
           transform-origin: bottom;
           animation: updown 900ms cubic-bezier(.2,.6,.2,1) infinite;
-        }
-
-        .b1 {
-          background: #e63946;
-          height: 90%;
-          animation-delay: 0ms;
-        }
-
-        .b2 {
-          background: #2a9d8f;
-          height: 65%;
-          animation-delay: 150ms;
-        }
-
-        .b3 {
-          background: #f4a261;
-          height: 50%;
-          animation-delay: 300ms;
         }
 
         @keyframes updown {

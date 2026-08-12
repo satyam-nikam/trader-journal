@@ -18,7 +18,7 @@ export const useGetTradeById = (requestData: GetTradeByIdPayload) => {
   return useQuery({
     queryKey: ["trades", requestData.userId, requestData.tradeId],
     queryFn: () => getTradeByIdApi(requestData),
-    enabled: !!requestData,
+    enabled: Boolean(requestData?.userId) && (requestData?.tradeId ?? 0) > 0,
   });
 };
 

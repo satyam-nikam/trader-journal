@@ -7,7 +7,7 @@ import Field from "@/components/common/Field";
 import Button from "@/components/common/Button";
 import Spinner from "@/components/common/Spinner";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { FaChartLine, FaPlus, FaRocket } from "react-icons/fa";
+import { FaArrowLeft, FaChartLine, FaPlus, FaRocket } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { useGetAllStrategies, useGetStrategyById, useSaveStrategy, useUpdateStrategy } from "@/hooks/useStrategy";
@@ -91,7 +91,12 @@ export default function CreateUpdateStrategy() {
   const { UserID, selectedStrategyID } = useUserStore();
   const isEditing = selectedStrategyID > 0;
   const { showToast } = useToast();
-  const { data: strategyData, isPending: isLoadingStrategy } = useGetStrategyById({ userId: UserID, strategyId: selectedStrategyID });
+  const {
+    data: strategyData,
+    isPending: strategyIsPending,
+    isFetching: strategyIsFetching,
+  } = useGetStrategyById({ userId: UserID, strategyId: selectedStrategyID });
+  const isLoadingStrategy = isEditing && (strategyIsPending || strategyIsFetching);
   const { mutate: saveStrategyMutate, isPending: isSaving } = useSaveStrategy();
   const { mutate: updateStrategyMutate, isPending: isUpdating } = useUpdateStrategy();
   const [conditionInput, setConditionInput] = useState("");
@@ -116,6 +121,7 @@ export default function CreateUpdateStrategy() {
     ? rawEntryConditions
     : [];
   const loading = isLoadingStrategy || isSaving || isUpdating || isSubmitting;
+  console.log(isLoadingStrategy, isSaving, isUpdating, isSubmitting)
 
   useEffect(() => {
     if (
@@ -208,7 +214,15 @@ export default function CreateUpdateStrategy() {
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-black/5">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-linear-to-r from-slate-900 via-slate-800 to-slate-700 px-6 py-6 text-white">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Go back"
+              className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-white/15 bg-slate-800/80 text-slate-100 shadow-sm transition hover:bg-slate-700/90"
+            >
+              <FaArrowLeft size={18} />
+            </button>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
               <FaChartLine size={20} />
             </div>
             <div>
@@ -233,7 +247,7 @@ export default function CreateUpdateStrategy() {
           className="flex flex-col gap-4 px-6 py-5"
           onSubmit={handleSubmit(onSubmit)}
         >
-          {loading && <Spinner />}
+          {loading && <Spinner fullscreen={false} />}
           <div className="grid grid-cols-2 gap-3">
             <Controller
               name="name"

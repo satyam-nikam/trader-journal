@@ -17,7 +17,7 @@ export const useGetAllRules = (requestData: { userId: number }) => {
   return useQuery({
     queryKey: ["rules", requestData.userId],
     queryFn: () => getAllRulesApi(requestData.userId),
-    enabled: !!requestData,
+    enabled: !!requestData.userId,
   });
 };
 

@@ -24,7 +24,7 @@ export const useGetStrategyById = (requestData: GetStrategyByIdPayload) => {
   return useQuery({
     queryKey: ["strategies", requestData.userId, requestData.strategyId],
     queryFn: () => getStrategyByIdApi(requestData),
-    enabled: !!requestData,
+    enabled: Boolean(requestData?.userId) && (requestData?.strategyId ?? 0) > 0,
   });
 };
 
@@ -32,7 +32,7 @@ export const useGetAllStrategies = (requestData: { userId: number }) => {
   return useQuery({
     queryKey: ["strategies", requestData.userId],
     queryFn: () => getAllStrategiesApi(requestData.userId),
-    enabled: !!requestData,
+    enabled: !!requestData.userId,
   });
 };
 

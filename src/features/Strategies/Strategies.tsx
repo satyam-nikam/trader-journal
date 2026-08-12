@@ -33,7 +33,7 @@ export default function Strategies() {
   const { mutate: deleteStrategyMutate, isPending: isDeleting } = useDeleteStrategy();
   const { data, isPending: isLoadingStrategies, refetch } = useGetAllStrategies({ userId: UserID });
   const strategies = (data?.strategies ?? []) as Strategies[];
-  const loading = isLoadingStrategies || isDeleting;
+  const loading = isDeleting;
 
   useEffect(() => {
     if (!isLoadingStrategies && data?.success === false && data?.message) {
@@ -140,7 +140,7 @@ export default function Strategies() {
           text="New Strategy"
           onClick={() => {
             setSelectedStrategyID(0);
-            router.push("/strategies/id/0");
+            router.push("/strategies/id");
           }}
         />
       </div>

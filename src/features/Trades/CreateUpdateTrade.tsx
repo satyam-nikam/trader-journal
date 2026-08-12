@@ -15,7 +15,7 @@ import useUserStore from "@/store/UserStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { FaChartLine, FaRocket, FaShieldAlt } from "react-icons/fa";
+import { FaArrowLeft, FaChartLine, FaRocket, FaShieldAlt } from "react-icons/fa";
 
 interface TradeFormValues {
   entryDate: string;
@@ -82,12 +82,17 @@ export default function CreateUpdateTrade() {
   const router = useRouter();
   const { showToast } = useToast();
   const { UserID, selectedTradeID } = useUserStore();
+  const isEditing = selectedTradeID > 0;
   const { data: Rules, isPending: isLoadingRules } = useGetAllRules({ userId: UserID, });
   const { data: Strategies, isPending: isLoadingStrategies } = useGetAllStrategies({ userId: UserID });
   const { mutate: saveTradeMutate, isPending: isSaving } = useSaveTrade();
-    const { mutate: updateTradeMutate, isPending: isUpdating } = useUpdateTrade();
-  const { data: tradeData, isPending: isLoadingTradeData } = useGetTradeById({ tradeId: selectedTradeID, userId: UserID });
-  const loading = isLoadingRules || isLoadingStrategies || isLoadingTradeData;
+  const { mutate: updateTradeMutate, isPending: isUpdating } = useUpdateTrade();
+  const {
+    data: tradeData,
+    isPending: tradeIsPending,
+    isFetching: tradeIsFetching,
+  } = useGetTradeById({ tradeId: selectedTradeID, userId: UserID });
+  const loading = isLoadingRules || isLoadingStrategies || (isEditing && (tradeIsPending || tradeIsFetching));
 
   const ruleOptions =
     Rules?.rules?.map((rule: RuleItem) => ({
@@ -131,6 +136,7 @@ export default function CreateUpdateTrade() {
 
   useEffect(() => {
     if(selectedTradeID > 0 && tradeData) {
+      console.log("Resetting form with trade data:");
       reset({
         entryDate: tradeData.entryDate,
         fromDate: tradeData.fromDate,
@@ -152,6 +158,8 @@ export default function CreateUpdateTrade() {
         tradeImg: tradeData.tradeImg
       })
     } else{
+      console.log("Resetting form with default values:");
+
       reset({
         entryDate: "",
         fromDate: "",
@@ -235,7 +243,15 @@ export default function CreateUpdateTrade() {
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-linear-to-r from-slate-900 via-slate-800 to-slate-700 px-6 py-6 text-white">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Go back"
+              className="flex h-14 min-w-14 items-center justify-center rounded-2xl border border-white/15 bg-slate-800/80 text-slate-100 shadow-sm transition hover:bg-slate-700/90"
+            >
+              <FaArrowLeft size={18} />
+            </button>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-blue-200">
               <FaChartLine size={20} />
             </div>
             <div>
@@ -258,7 +274,7 @@ export default function CreateUpdateTrade() {
           className="flex flex-col gap-5 px-6 py-6"
           onSubmit={handleSubmit(onSubmit)}
         >
-          {loading && <Spinner />}
+          {loading && <Spinner fullscreen={false} />}
           <div className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
             <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
               <FaShieldAlt className="text-blue-500" />
