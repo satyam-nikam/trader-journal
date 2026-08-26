@@ -5,6 +5,8 @@ import { useLogin, useRegister, useVerifyOTP } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import useUserStore from "@/store/UserStore";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { FaRegEyeSlash } from "react-icons/fa";
 
 export default function Login() {
   const router = useRouter();
@@ -12,9 +14,11 @@ export default function Login() {
   const { UserID, setUserID } = useUserStore();
   const { mutate: registerMutate, isPending: registerPending } = useRegister();
   const { mutate: loginMutate, isPending: loginPending } = useLogin();
-  const { mutate: verifyOtpMutate, isPending: verifyOtpPending } = useVerifyOTP();
+  const { mutate: verifyOtpMutate, isPending: verifyOtpPending } =
+    useVerifyOTP();
 
   const [tab, setTab] = useState<"login" | "register" | "2fa">("login");
+  const [showPassword, setShowPassword] = useState(false);
   const [timer, setTimer] = useState(120);
   const [pendingUserId, setPendingUserId] = useState(0);
   const otpRefs = [
@@ -43,29 +47,29 @@ export default function Login() {
   });
 
   useEffect(() => {
-  if (tab !== "2fa") return;
+    if (tab !== "2fa") return;
 
-  if (timer <= 0) return;
+    if (timer <= 0) return;
 
-  const interval = setInterval(() => {
-    setTimer((prev) => {
-      if (prev <= 1) {
-        clearInterval(interval);
-        return 0;
-      }
-      return prev - 1;
-    });
-  }, 1000);
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, [tab, timer]);
+    return () => clearInterval(interval);
+  }, [tab, timer]);
 
-const formatTimer = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
 
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-};
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
 
   const handleChange = (e: any) => {
     setUser((state) => ({ ...state, [e.target.name]: e.target.value }));
@@ -116,15 +120,30 @@ const formatTimer = (seconds: number) => {
       passwordErr: "",
       repasswordErr: "",
     }));
-    
+
     loginMutate(
       { email: user.email, password: user.password },
       {
         onSuccess: (response: any) => {
-          showToast("success", response?.message || "Logged in successfully");
-          setPendingUserId(response?.data?.id || response?.user?.id || 0);
-          setTimer(120);
-          setTab("2fa");
+          if (response.success) {
+            showToast(
+              "success",
+              response?.message ||
+                "Valid credentials. Please enter the OTP sent to your email.",
+            );
+            setPendingUserId(response?.data?.id || response?.user?.id || 0);
+            setTimer(120);
+            setTab("2fa");
+          } else {
+            showToast(
+              "error",
+              response?.message || "Login failed. Please try again.",
+            );
+            setUser((state) => ({
+              ...state,
+              failErr: response?.message || "Login failed. Please try again.",
+            }));
+          }
         },
         onError: (error: any) => {
           const message = error?.message || "Invalid email or password";
@@ -139,51 +158,70 @@ const formatTimer = (seconds: number) => {
   };
 
   const verifyOtp = () => {
-  if (!user.otp || user.otp.length < 4) {
-    setUser((state) => ({ ...state, otpErr: "Please enter the 4-digit OTP" }));
-    return;
-  }
+    if (!user.otp || user.otp.length < 4) {
+      setUser((state) => ({
+        ...state,
+        otpErr: "Please enter the 4-digit OTP",
+      }));
+      return;
+    }
 
-  setUser((state) => ({ ...state, otpErr: "" }));
+    setUser((state) => ({ ...state, otpErr: "" }));
 
-  verifyOtpMutate(
-    { email: user.email, otp: user.otp },  // pass whatever your API expects
-    {
-      onSuccess: () => {
-        showToast("success", "OTP verified successfully");
-        if (pendingUserId > 0) {
-          setUserID(pendingUserId);
-        }
-        setPendingUserId(0);
-        router.replace("/dashboard");
-        console.log("otp verified")
-        setUser({
-            email: "",
-            password: "",
-            fullname: "",
-            emailErr: "",
-            passwordErr: "",
-            repassword: "",
-            repasswordErr: "",
-            failErr: "",
+    verifyOtpMutate(
+      { email: user.email, otp: user.otp }, // pass whatever your API expects
+      {
+        onSuccess: (response: any) => {
+          if (response.success) {
+            showToast(
+              "success",
+              response?.message || "OTP verified successfully",
+            );
+            if (pendingUserId > 0) {
+              setUserID(pendingUserId);
+            }
+            setPendingUserId(0);
+            router.replace("/dashboard");
+            console.log("otp verified");
+            setUser({
+              email: "",
+              password: "",
+              fullname: "",
+              emailErr: "",
+              passwordErr: "",
+              repassword: "",
+              repasswordErr: "",
+              failErr: "",
+              otp: "",
+              otpErr: "",
+            });
+          } else {
+            showToast(
+              "error",
+              response?.message || "OTP verification failed. Please try again.",
+            );
+            setUser((state) => ({
+              ...state,
+              otpErr:
+                response?.message ||
+                "OTP verification failed. Please try again.",
+            }));
+          }
+        },
+        onError: (error: any) => {
+          const message = error?.message || "Invalid OTP. Try again.";
+          showToast("warning", message);
+          setUser((state) => ({
+            ...state,
+            otpErr: message,
             otp: "",
-            otpErr: "",
-          });
+          }));
+          // refocus first OTP input
+          otpRefs[0].current?.focus();
+        },
       },
-      onError: (error: any) => {
-        const message = error?.message || "Invalid OTP. Try again.";
-        showToast("warning", message);
-        setUser((state) => ({
-          ...state,
-          otpErr: message,
-          otp: "",   
-        }));
-        // refocus first OTP input
-        otpRefs[0].current?.focus();
-      },
-    },
-  );
-};
+    );
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     // Only allow numeric input
@@ -212,16 +250,16 @@ const formatTimer = (seconds: number) => {
   };
 
   const handleResendOtp = () => {
-  if (timer > 0) return;
+    if (timer > 0) return;
 
-  setUser((state) => ({
-    ...state,
-    otp: "",
-    otpErr: "",
-  }));
+    setUser((state) => ({
+      ...state,
+      otp: "",
+      otpErr: "",
+    }));
 
-  setTimer(120);
-};
+    setTimer(120);
+  };
 
   const register = (e: any) => {
     console.log("Registering user:", {
@@ -265,24 +303,39 @@ const formatTimer = (seconds: number) => {
       { email: user.email, password: user.password, fullName: user.fullname },
       {
         onSuccess: (response: any) => {
-          showToast("success", response?.message || "Account created successfully");
-          console.log("User created");
-          setUser({
-            email: "",
-            password: "",
-            fullname: "",
-            emailErr: "",
-            passwordErr: "",
-            repassword: "",
-            repasswordErr: "",
-            failErr: "",
-            otp: "",
-            otpErr: "",
-          });
-          setTab("login");
+          if (response.success) {
+            showToast(
+              "success",
+              response?.message || "Account created successfully",
+            );
+            setUser({
+              email: "",
+              password: "",
+              fullname: "",
+              emailErr: "",
+              passwordErr: "",
+              repassword: "",
+              repasswordErr: "",
+              failErr: "",
+              otp: "",
+              otpErr: "",
+            });
+            setTab("login");
+          } else {
+            showToast(
+              "error",
+              response?.message || "Registration failed. Please try again.",
+            );
+            setUser((state) => ({
+              ...state,
+              failErr:
+                response?.message || "Registration failed. Please try again.",
+            }));
+          }
         },
         onError: (error: any) => {
-          const message = error?.message || "Registration failed. Please try again.";
+          const message =
+            error?.message || "Registration failed. Please try again.";
           showToast("error", message);
           setUser((state) => ({
             ...state,
@@ -341,14 +394,19 @@ const formatTimer = (seconds: number) => {
           {/* login */}
           <div className={`${tab === "login" ? "block" : "hidden"} space-y-4`}>
             <div>
-              <p className="text-3xl font-bold text-center text-white">Welcome Back</p>
+              <p className="text-3xl font-bold text-center text-white">
+                Welcome Back
+              </p>
               <p className="text-center text-white/70 text-sm">
                 Sign in to your account
               </p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-sm text-white font-semibold">
+              <label
+                htmlFor="email"
+                className="text-sm text-white font-semibold"
+              >
                 Email Address
               </label>
               <input
@@ -364,18 +422,31 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="password" className="text-sm text-white font-semibold">
+              <label
+                htmlFor="password"
+                className="text-sm text-white font-semibold"
+              >
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                onChange={handleChange}
-                value={user.password}
-                placeholder="Enter your password"
-                className="border border-[#ffffff0f] rounded-lg p-3 w-full h-auto bg-white/5 placeholder:text-sm text-white"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  onChange={handleChange}
+                  value={user.password}
+                  placeholder="Enter your password"
+                  className="border border-[#ffffff0f] rounded-lg p-3 pr-10 w-full h-auto bg-white/5 placeholder:text-sm text-white"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                >
+                  {showPassword ? <MdOutlineRemoveRedEye /> : <FaRegEyeSlash />}
+                </button>
+              </div>
               <span className="text-red-500 text-sm">{user.passwordErr}</span>
             </div>
 
@@ -425,7 +496,9 @@ const formatTimer = (seconds: number) => {
           {/* two factor auth */}
           <div className={`${tab === "2fa" ? "block" : "hidden"} space-y-4`}>
             <div>
-              <p className="text-3xl font-bold text-center text-white">Enter OTP</p>
+              <p className="text-3xl font-bold text-center text-white">
+                Enter OTP
+              </p>
               <p className="text-center text-white/70 text-sm">
                 Otp is sent to your email address.
               </p>
@@ -454,7 +527,7 @@ const formatTimer = (seconds: number) => {
             <div>
               <button
                 type="button"
-                onClick={verifyOtp}   
+                onClick={verifyOtp}
                 disabled={verifyOtpPending}
                 className="w-full bg-[#6c47ff] hover:bg-[#5a3ae8] text-white font-bold py-3 px-4 rounded-lg cursor-pointer disabled:opacity-50"
               >
@@ -468,21 +541,21 @@ const formatTimer = (seconds: number) => {
               </p>
               <div>
                 {timer > 0 && (
-                <span className="mr-2 text-white/50">
-                  ({formatTimer(timer)})
-                </span>
-              )}
-              <span
-                className={`text-base underline transition-colors
+                  <span className="mr-2 text-white/50">
+                    ({formatTimer(timer)})
+                  </span>
+                )}
+                <span
+                  className={`text-base underline transition-colors
                 ${
                   timer > 0
                     ? "text-white/30 cursor-not-allowed pointer-events-none"
                     : "text-[#6c47ff] cursor-pointer"
                 }`}
-                onClick={handleResendOtp}
-              >
-                Resend
-              </span>
+                  onClick={handleResendOtp}
+                >
+                  Resend
+                </span>
               </div>
             </div>
           </div>
@@ -492,14 +565,19 @@ const formatTimer = (seconds: number) => {
             className={`${tab === "register" ? "block" : "hidden"} space-y-4`}
           >
             <div>
-              <p className="text-3xl font-bold text-center text-white">Create Account</p>
+              <p className="text-3xl font-bold text-center text-white">
+                Create Account
+              </p>
               <p className="text-center text-white/70 text-sm">
                 Sign up to get started
               </p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="fullname" className="text-sm text-white font-semibold">
+              <label
+                htmlFor="fullname"
+                className="text-sm text-white font-semibold"
+              >
                 Full Name
               </label>
               <input
@@ -514,7 +592,10 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-sm text-white font-semibold">
+              <label
+                htmlFor="email"
+                className="text-sm text-white font-semibold"
+              >
                 Email Address
               </label>
               <input
@@ -530,7 +611,10 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="password" className="text-sm text-white font-semibold">
+              <label
+                htmlFor="password"
+                className="text-sm text-white font-semibold"
+              >
                 Password
               </label>
               <input
@@ -546,7 +630,10 @@ const formatTimer = (seconds: number) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="repassword" className="text-sm text-white font-semibold">
+              <label
+                htmlFor="repassword"
+                className="text-sm text-white font-semibold"
+              >
                 Confirm Password
               </label>
               <input

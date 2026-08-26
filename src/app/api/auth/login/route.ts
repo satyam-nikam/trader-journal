@@ -19,6 +19,7 @@ export async function POST(
       token,
       data: user,
       requiresOtp: true,
+      message: "Valid credentials. Please enter the OTP sent to your email.",
     });
   } catch (error) {
     return NextResponse.json(
