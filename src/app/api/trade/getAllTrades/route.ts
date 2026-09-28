@@ -1,12 +1,11 @@
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import { getAllTrades } from "@/services/trades.service";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
     try {
-        getAuthenticatedUser(req);
-        const body = await req.json();
-        const { trades, count } = await getAllTrades(body.userId);
+        const user = getAuthenticatedUser(req);
+        const { trades, count } = await getAllTrades(user.userId);
 
         return new Response(
             JSON.stringify({
@@ -21,9 +20,7 @@ export async function POST(req: NextRequest) {
                 success: false,
                 message: error instanceof Error ? error.message : "Something went wrong",
             }),
-            {
-                status: 500,
-            }
+            { status: error instanceof UnauthorizedError ? 401 : 500 }
         );
     }
 }

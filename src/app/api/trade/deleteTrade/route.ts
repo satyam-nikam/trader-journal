@@ -1,8 +1,10 @@
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import { deleteTrade } from "@/services/trades.service";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const user = getAuthenticatedUser(req);
     const body = await req.json();
     const tradeId = Number(body.id);
 
@@ -18,7 +20,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const trade = await deleteTrade(tradeId);
+    const trade = await deleteTrade(tradeId, user.userId);
 
     const response = NextResponse.json({
       success: true,
@@ -35,7 +37,7 @@ export async function POST(req: Request) {
           error instanceof Error ? error.message : "Something went wrong",
       },
       {
-        status: 500,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       }
     );
   }

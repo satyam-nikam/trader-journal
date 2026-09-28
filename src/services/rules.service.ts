@@ -63,10 +63,12 @@ export const updateRule = async (
   ruleNumber: string,
   category: string,
   status: string,
+  userId: number,
 ) => {
-  const existingRule = await prisma.rules.findUnique({
+  const existingRule = await prisma.rules.findFirst({
     where: {
       id,
+      userId,
     },
   });
 
@@ -87,6 +89,7 @@ export const updateRule = async (
   const updatedRule = await prisma.rules.update({
     where: {
       id,
+      userId,
     },
     data: {
       rule,
@@ -112,10 +115,11 @@ export const getRuleById = async (id: number, userId: number) => {
   return rule;
 };
 
-export const deleteRule = async (id: number) => {
-  const existingRule = await prisma.rules.findUnique({
+export const deleteRule = async (id: number, userId: number) => {
+  const existingRule = await prisma.rules.findFirst({
     where: {
       id,
+      userId,
     },
   });
   if (!existingRule) {
@@ -124,6 +128,7 @@ export const deleteRule = async (id: number) => {
   await prisma.rules.delete({
     where: {
       id,
+      userId,
     },
   });
 };

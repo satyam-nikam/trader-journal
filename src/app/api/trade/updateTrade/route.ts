@@ -1,13 +1,10 @@
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import { updateTrade } from "@/services/trades.service";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const request = req as Request & {
-      cookies?: { get: (name: string) => { value: string } | undefined };
-    };
-    getAuthenticatedUser(request as never);
+    const user = getAuthenticatedUser(req);
     const body = await req.json();
 
     const newTrade = await updateTrade(
@@ -30,6 +27,7 @@ export async function POST(req: Request) {
       body.rulesFollowed,
       body.notes,
       body.tradeImg,
+      user.userId,
     );
 
     return NextResponse.json({
@@ -41,6 +39,6 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: false,
       message: error instanceof Error ? error.message : "Something went wrong",
-    });
+    }, { status: error instanceof UnauthorizedError ? 401 : 500 });
   }
 }

@@ -8,7 +8,7 @@ export async function POST(
   try {
     const body = await req.json();
 
-    const { token, user } =
+    const { user } =
       await loginUser(
         body.email,
         body.password
@@ -16,7 +16,6 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      token,
       data: user,
       requiresOtp: true,
       message: "Valid credentials. Please enter the OTP sent to your email.",

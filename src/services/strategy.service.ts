@@ -77,10 +77,12 @@ export const updateStrategy = async (
     timeFrame: string[],
     entryConditions: string[],
     indicatorsUsed: string[],
+    userId: number,
 ) => {
-    const existingStrategy = await prisma.strategy.findUnique({
+    const existingStrategy = await prisma.strategy.findFirst({
         where: {
             id,
+            userId,
         },
     });
 
@@ -91,6 +93,7 @@ export const updateStrategy = async (
     const updatedStrategy = await prisma.strategy.update({
         where: {
             id,
+            userId,
         },
         data: {
             name,
@@ -106,10 +109,11 @@ export const updateStrategy = async (
     return updatedStrategy;
 };
 
-export const deleteStrategy = async (id: number) => {
-    const existingStrategy = await prisma.strategy.findUnique({
+export const deleteStrategy = async (id: number, userId: number) => {
+    const existingStrategy = await prisma.strategy.findFirst({
         where: {
             id,
+            userId,
         },
     });
     if (!existingStrategy) {
@@ -118,6 +122,7 @@ export const deleteStrategy = async (id: number) => {
     return await prisma.strategy.delete({
         where: {
             id,
+            userId,
         },
     });
 };

@@ -13,7 +13,7 @@ export const getDashboardDataByTrades = async (userId: number, tradeCount: numbe
         take: tradeCount,
     });
 
-    const profitableTrades = trades.filter((trade: any) => trade.result === "profit");
+    const profitableTrades = trades.filter((trade: any) => trade.result === "win");
     const lossTrades = trades.filter((trade: any) => trade.result === "loss");
     const capitalUsed = trades.reduce((acc: number, trade: any) => acc + trade.capitalUsed, 0);
     const totalPnl = trades.reduce((acc: number, trade: any) => acc + trade.totalPnl, 0);

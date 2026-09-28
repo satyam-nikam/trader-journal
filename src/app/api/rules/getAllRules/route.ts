@@ -1,15 +1,15 @@
 import { getAllRules } from "@/services/rules.service";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    getAuthenticatedUser(req);
-    const body = await req.json();
-    const {rules, count} = await getAllRules(body.userId);
+    const user = getAuthenticatedUser(req);
+    const { rules, count } = await getAllRules(user.userId);
 
     return NextResponse.json({
       success: true,
+      message: "All Rules fetched successfully",
       rules,
       count,
     });
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
             : "Something went wrong",
       },
       {
-        status: 500,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       }
     );
   }

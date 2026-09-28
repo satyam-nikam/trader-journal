@@ -1,12 +1,12 @@
-import { getAllStrategies, getStrategyById } from "@/services/strategy.service";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getStrategyById } from "@/services/strategy.service";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const user = getAuthenticatedUser(req);
     const body = await req.json();
-    getAuthenticatedUser(req);
-    const { strategy } = await getStrategyById(body.userId, body.strategyId);
+    const strategy = await getStrategyById(Number(body.strategyId), user.userId);
 
     return NextResponse.json({
       success: true,
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
             : "Something went wrong",
       },
       {
-        status: 500,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       }
     );
   }

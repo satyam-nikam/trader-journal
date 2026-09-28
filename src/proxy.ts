@@ -1,19 +1,8 @@
 import { verifyToken } from "@/lib/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
-  const pathname = request.nextUrl.pathname;
-
-  const isProtectedRoute =
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/trades") ||
-    pathname.startsWith("/strategies") ||
-    pathname.startsWith("/rulebook");
-
-  if (!isProtectedRoute) {
-    return NextResponse.next();
-  }
 
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -34,5 +23,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/trades/:path*", "/strategies/:path*", "/rulebook/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/trades/:path*",
+    "/strategies/:path*",
+    "/rulebook/:path*",
+  ],
 };

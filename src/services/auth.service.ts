@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/bcrypt";
 import { comparePassword } from "@/lib/bcrypt";
-import { generateToken } from "@/lib/jwt";
 import { generateOTP } from "@/lib/otp";
 import { Resend } from 'resend';
 
@@ -34,7 +33,11 @@ export const registerUser = async (
     },
   });
 
-  return user;
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+  };
 };
 
 export const loginUser = async (
@@ -64,13 +67,8 @@ export const loginUser = async (
     );
   }
 
-  const token = generateToken(
-    user.id
-  );
-
   const otp = generateOTP();
   await saveOTP(email, otp);
-  console.log("Generated OTP:", otp);
 
   const resend = new Resend(process.env.RESEND_API_KEY || "");
   const senderEmail =
@@ -99,8 +97,11 @@ export const loginUser = async (
   }
 
   return {
-    token,
-    user,
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+    },
   };
 };
 
@@ -108,7 +109,6 @@ export const saveOTP = async (
   email: string,
   otp: string
 ) => {
-  console.log("Saving OTP for email:", email);
   const expiry = new Date(
     Date.now() + 2 * 60 * 1000
   );
@@ -133,13 +133,11 @@ export const verifyOTP = async (
   if (!user) {
     throw new Error("User not found");
   }
-  console.log(user.otp, otp)
-
   if (user.otp !== otp) {
     throw new Error("Invalid OTP");
   }
 
-  if (user.otpExpiry && (new Date() > user.otpExpiry)) {
+  if (!user.otpExpiry || new Date() > user.otpExpiry) {
     throw new Error("OTP has expired");
   }
 

@@ -67,7 +67,7 @@ export default function CreateUpdateRuleModal({
       status: (rule?.status as string) || "",
     },
   });
-  
+
   const loading = isSaving || isUpdating || isSubmitting;
   const header = rule?.id ? "Edit Rule" : "New Rule";
 
@@ -89,15 +89,19 @@ export default function CreateUpdateRuleModal({
         },
         {
           onSuccess: (response: any) => {
-            showToast("success", response?.message || successMessage);
-            onClose();
-            refetchRules();
+            if (response.success) {
+              showToast("success", response?.message || successMessage);
+              onClose();
+              refetchRules();
+            } else {
+              showToast("error", response?.message || "Unable to update rule");
+            }
           },
           onError: (error: any) => {
             const message = error?.message || "Unable to update rule";
             showToast("error", message);
           },
-        }
+        },
       );
       return;
     }
@@ -112,22 +116,31 @@ export default function CreateUpdateRuleModal({
       },
       {
         onSuccess: (response: any) => {
-          showToast("success", response?.message || successMessage);
-          onClose();  
-          refetchRules();
+          if (response.success) {
+            showToast("success", response?.message || successMessage);
+            onClose();
+            refetchRules();
+          } else {
+            showToast("error", response?.message || "Unable to save rule");
+          }
         },
         onError: (error: any) => {
           const message = error?.message || "Unable to save rule";
           showToast("error", message);
         },
-      }
+      },
     );
-
   }
 
   const footer = (
     <div className="flex flex-wrap justify-center gap-2">
-      <Button type="button" btnType="danger" disabled={loading} text="Cancel" onClick={onClose} />
+      <Button
+        type="button"
+        btnType="danger"
+        disabled={loading}
+        text="Cancel"
+        onClick={onClose}
+      />
       <Button
         type="button"
         btnType="secondary"
@@ -166,10 +179,15 @@ export default function CreateUpdateRuleModal({
       footer={footer}
       className="max-w-2xl overflow-hidden rounded-2xl"
     >
-      <form className="flex flex-col gap-4 p-1" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        className="flex flex-col gap-4 p-1"
+        onSubmit={handleSubmit(onSubmit)}
+      >
         {(isSaving || isUpdating) && <Spinner />}
         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-          <div className="mb-3 text-sm font-semibold text-slate-700">Rule details</div>
+          <div className="mb-3 text-sm font-semibold text-slate-700">
+            Rule details
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <Controller
@@ -177,7 +195,11 @@ export default function CreateUpdateRuleModal({
               control={control}
               rules={{ required: "Rule number is required" }}
               render={({ field }) => (
-                <Field label="Rule number" htmlFor="ruleNumber" error={errors.ruleNumber?.message}>
+                <Field
+                  label="Rule number"
+                  htmlFor="ruleNumber"
+                  error={errors.ruleNumber?.message}
+                >
                   <input
                     {...field}
                     id="ruleNumber"
@@ -194,7 +216,11 @@ export default function CreateUpdateRuleModal({
               control={control}
               rules={{ required: "Category is required" }}
               render={({ field }) => (
-                <Field label="Category" htmlFor="category" error={errors.category?.message}>
+                <Field
+                  label="Category"
+                  htmlFor="category"
+                  error={errors.category?.message}
+                >
                   <Select
                     id="category"
                     options={categoryOptions}
@@ -213,7 +239,11 @@ export default function CreateUpdateRuleModal({
               control={control}
               rules={{ required: "Status is required" }}
               render={({ field }) => (
-                <Field label="Status" htmlFor="status" error={errors.status?.message}>
+                <Field
+                  label="Status"
+                  htmlFor="status"
+                  error={errors.status?.message}
+                >
                   <Select
                     id="status"
                     options={statusOptions}
@@ -232,7 +262,11 @@ export default function CreateUpdateRuleModal({
           control={control}
           rules={{ required: "Rule text is required" }}
           render={({ field }) => (
-            <Field label="Rule description" htmlFor="rule" error={errors.rule?.message}>
+            <Field
+              label="Rule description"
+              htmlFor="rule"
+              error={errors.rule?.message}
+            >
               <textarea
                 {...field}
                 id="rule"

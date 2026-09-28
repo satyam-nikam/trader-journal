@@ -1,15 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { saveStrategy } from "@/services/strategy.service";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const request = req as Request & { cookies?: { get: (name: string) => { value: string } | undefined } };
-    getAuthenticatedUser(request as never);
+    const user = getAuthenticatedUser(req);
     const body = await req.json();
 
     const newRule = await saveStrategy(
-      body.userId,
+      user.userId,
       body.name,
       body.strategyType,
       body.instrumentType,
@@ -31,7 +30,7 @@ export async function POST(req: Request) {
         message: error instanceof Error ? error.message : "Something went wrong",
       },
       {
-        status: 401,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       }
     );
   }

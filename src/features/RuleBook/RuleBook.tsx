@@ -21,28 +21,35 @@ interface RuleItem {
 
 export default function RuleBook() {
   const { showToast } = useToast();
-  const {UserID } = useUserStore();
+  const { UserID } = useUserStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState<RuleItem | null>(null);
   const { mutate: deleteRuleMutate, isPending: isDeleting } = useDeleteRule();
 
-  const { data, isPending: isLoadingRules, refetch } = useGetAllRules({ userId: UserID });
+  const {
+    data,
+    isPending: isLoadingRules,
+    refetch,
+  } = useGetAllRules({ userId: UserID });
   const rules = (data?.rules ?? []) as RuleItem[];
   const loading = isLoadingRules || isDeleting;
-  console.log("Rules from API:", data);
 
   const onDelete = () => {
     console.log(selectedRule);
     if (selectedRule) {
       deleteRuleMutate(selectedRule.id, {
         onSuccess: (response: any) => {
-          showToast(
-            "success",
-            response?.message || "Rule deleted successfully",
-          );
-          setDeleteModalOpen(false);
-          refetch();
+          if (response.success) {
+            showToast(
+              "success",
+              response?.message || "Rule deleted successfully",
+            );
+            setDeleteModalOpen(false);
+            refetch();
+          } else {
+            showToast("error", response?.message || "Unable to delete rule");
+          }
         },
         onError: (error: any) => {
           const message = error?.message || "Unable to update rule";
@@ -55,7 +62,7 @@ export default function RuleBook() {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 px-5 py-4 shadow-sm shadow-black/5">
-      {loading && <Spinner />}
+        {loading && <Spinner />}
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Rulebook</h2>
           <p className="mt-1 text-sm text-slate-500">

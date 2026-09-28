@@ -17,6 +17,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
+      message: "User registered successfully",
       user,
     });
   } catch (error) {

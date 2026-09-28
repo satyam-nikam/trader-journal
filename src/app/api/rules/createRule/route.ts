@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { saveRule } from "@/services/rules.service";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const request = req as Request & { cookies?: { get: (name: string) => { value: string } | undefined } };
-    const auth = getAuthenticatedUser(request as never);
+    const auth = getAuthenticatedUser(req);
     const body = await req.json();
 
     const newRule = await saveRule(
@@ -13,7 +12,7 @@ export async function POST(req: Request) {
       body.ruleNumber,
       body.category,
       body.status,
-      body.userId
+      auth.userId
     );
 
     return NextResponse.json({
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
         message: error instanceof Error ? error.message : "Something went wrong",
       },
       {
-        status: 401,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       }
     );
   }

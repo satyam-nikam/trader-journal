@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import { deleteStrategy, getStrategyById } from "@/services/strategy.service";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const user = getAuthenticatedUser(req);
     const body = await req.json();
-    const ruleId = Number(body.id);
+    const strategyId = Number(body.id);
 
-    if (!Number.isInteger(ruleId) || ruleId <= 0) {
+    if (!Number.isInteger(strategyId) || strategyId <= 0) {
       return NextResponse.json(
         {
           success: false,
@@ -18,21 +20,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const strategy = await getStrategyById(ruleId);
-
-    if (!strategy) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Strategy not found",
-        },
-        {
-          status: 404,
-        }
-      );
-    }
-
-    await deleteStrategy(ruleId);
+    await getStrategyById(strategyId, user.userId);
+    await deleteStrategy(strategyId, user.userId);
 
     return NextResponse.json({
       success: true,
@@ -45,7 +34,7 @@ export async function POST(req: Request) {
         message: error instanceof Error ? error.message : "Something went wrong",
       },
       {
-        status: 500,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       }
     );
   }

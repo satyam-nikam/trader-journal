@@ -68,10 +68,12 @@ export const updateTrade = async (
   rulesFollowed: string[],
   notes: string,
   tradeImg: string,
+  userId: number,
 ) => {
-  const existingTrade = await prisma.trade.findUnique({
+  const existingTrade = await prisma.trade.findFirst({
     where: {
       id,
+      userId,
     },
   });
 
@@ -82,6 +84,7 @@ export const updateTrade = async (
   const updatedTrade = await prisma.trade.update({
     where: {
       id,
+      userId,
     },
     data: {
       entryDate,
@@ -108,10 +111,11 @@ export const updateTrade = async (
   return updatedTrade;
 };
 
-export const deleteTrade = async (id:number) => {
-  const existingTrade = await prisma.trade.findUnique({
+export const deleteTrade = async (id: number, userId: number) => {
+  const existingTrade = await prisma.trade.findFirst({
     where: {
       id,
+      userId,
     },
   });
   if (!existingTrade) {
@@ -120,14 +124,16 @@ export const deleteTrade = async (id:number) => {
   return await prisma.trade.delete({
     where: {
       id,
+      userId,
     },
   });
 }
 
-export const getTradeById = async (id: number) => {
-  const trade = await prisma.trade.findUnique({
+export const getTradeById = async (id: number, userId: number) => {
+  const trade = await prisma.trade.findFirst({
     where: {
       id,
+      userId,
     },
   });
   if (!trade) {

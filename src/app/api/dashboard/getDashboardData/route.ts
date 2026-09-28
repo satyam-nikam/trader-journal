@@ -1,4 +1,4 @@
-import { getAuthenticatedUser } from "@/lib/auth";
+import { getAuthenticatedUser, UnauthorizedError } from "@/lib/auth";
 import {
   getDashboardDataByDateRange,
   getDashboardDataByTrades,
@@ -9,14 +9,14 @@ export async function POST(res: NextRequest) {
   try {
     const user = getAuthenticatedUser(res);
     const body = await res.json();
-    const { startDate, endDate, userId, tradeCount } = body;
+    const { startDate, endDate, tradeCount } = body;
     const dataByDate = await getDashboardDataByDateRange(
-      userId,
+      user.userId,
       startDate,
       endDate,
     );
     
-    const dataByTrades = await getDashboardDataByTrades(userId, tradeCount);
+    const dataByTrades = await getDashboardDataByTrades(user.userId, tradeCount);
     return NextResponse.json({
       success: true,
       dashboardData: { dataByDate, dataByTrades },
@@ -29,7 +29,7 @@ export async function POST(res: NextRequest) {
           error instanceof Error ? error.message : "Something went wrong",
       },
       {
-        status: 500,
+        status: error instanceof UnauthorizedError ? 401 : 500,
       },
     );
   }

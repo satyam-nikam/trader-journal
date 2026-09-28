@@ -174,6 +174,7 @@ export default function Trades() {
               size={20}
               onClick={() => {
                 setSelectedTradeID(row.original.id);
+                router.push("/trades/id");
               }}
             />
           </button>

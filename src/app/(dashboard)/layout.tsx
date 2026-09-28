@@ -6,6 +6,7 @@ import MainContent from "@/components/layout/MainContent";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import useUserStore from "@/store/UserStore";
+import CalculatorWidget from "@/components/common/TradingCalculator/CalculatorWidget";
 
 export default function DashboardLayout({
   children,
@@ -25,6 +26,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-[#f2f2f2]">
       <Sidebar />
       <Navbar />
+      {UserID > 0 && <CalculatorWidget />}
 
       <MainContent>{children}</MainContent>
     </div>

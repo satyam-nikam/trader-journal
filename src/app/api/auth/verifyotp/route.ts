@@ -17,12 +17,18 @@ export async function POST(
     const token = generateToken(verifiedUser.id);
     const response = NextResponse.json({
       success: true,
-      data: verifiedUser,
+      data: {
+        id: verifiedUser.id,
+        fullName: verifiedUser.fullName,
+        email: verifiedUser.email,
+      },
       message: "OTP verified successfully. You are now logged in.",
     });
 
     response.cookies.set("token", token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
