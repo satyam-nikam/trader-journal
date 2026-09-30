@@ -14,7 +14,7 @@ export interface TradePayload {
   totalPnl: number;
   tradeStatus: string;
   result: string;
-  strategy: string;
+  strategy: number;
   rulesFollowed: string[];
   notes: string;
   tradeImg: string ;
@@ -41,7 +41,7 @@ export interface TradeUpdatePayload {
   totalPnl: number;
   tradeStatus: string;
   result: string;
-  strategy: string;
+  strategy: number;
   rulesFollowed: string[];
   notes: string;
   tradeImg: string ;

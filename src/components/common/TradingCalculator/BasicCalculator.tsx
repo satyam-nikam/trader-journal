@@ -141,7 +141,7 @@ export default function BasicCalculator() {
           type="button"
           aria-label={ariaLabel ?? label}
           onClick={action}
-          className={`flex h-12 items-center justify-center rounded-lg bg-slate-100 text-base font-medium text-slate-800 transition hover:bg-slate-200 active:scale-[0.98] ${style}`}
+          className={`flex h-12 items-center justify-center rounded-lg bg-slate-200 text-base font-medium text-slate-800 transition hover:bg-slate-300 active:scale-[0.98] ${style}`}
         >
           {label === "⌫" ? <IoBackspaceOutline size={20} /> : label}
         </button>

@@ -3,10 +3,10 @@
 import { useState } from "react";
 
 export default function PositionSizeCalculator() {
-  const [capital, setCapital] = useState(0);
-  const [risk, setRisk] = useState(0);
-  const [entryPrice, setEntryPrice] = useState(0);
-  const [stopLoss, setStopLoss] = useState(0);
+  const [capital, setCapital] = useState("0");
+  const [risk, setRisk] = useState("0");
+  const [entryPrice, setEntryPrice] = useState("0");
+  const [stopLoss, setStopLoss] = useState("0");
   const [calculationResult, setCalculationResult] = useState({
     riskAmount: 0,
     riskPerShare: 0,
@@ -14,9 +14,13 @@ export default function PositionSizeCalculator() {
   });
 
   const handleCalculate = () => {
-    const riskAmount = (capital * risk) / 100;
-    const riskPerShare = Math.abs(entryPrice - stopLoss);
-    const quantity = riskAmount / riskPerShare;
+    const parsedCapital = Number(capital) || 0;
+    const parsedRisk = Number(risk) || 0;
+    const parsedEntryPrice = Number(entryPrice) || 0;
+    const parsedStopLoss = Number(stopLoss) || 0;
+    const riskAmount = (parsedCapital * parsedRisk) / 100;
+    const riskPerShare = Math.abs(parsedEntryPrice - parsedStopLoss);
+    const quantity = riskPerShare === 0 ? 0 : riskAmount / riskPerShare;
 
     setCalculationResult({
       riskAmount,
@@ -48,7 +52,7 @@ export default function PositionSizeCalculator() {
             onChange={(e) => {
               const regex = /^-?[0-9]*\.?[0-9]*$/;
               if (regex.test(e.target.value)) {
-                setCapital(parseFloat(e.target.value));
+                setCapital(e.target.value);
               }
             }}
           />
@@ -68,7 +72,7 @@ export default function PositionSizeCalculator() {
             onChange={(e) => {
               const regex = /^-?[0-9]*\.?[0-9]*$/;
               if (regex.test(e.target.value)) {
-                setRisk(parseFloat(e.target.value));
+                setRisk(e.target.value);
               }
             }}
           />
@@ -88,7 +92,7 @@ export default function PositionSizeCalculator() {
             onChange={(e) => {
               const regex = /^-?[0-9]*\.?[0-9]*$/;
               if (regex.test(e.target.value)) {
-                setEntryPrice(parseFloat(e.target.value));
+                setEntryPrice(e.target.value);
               }
             }}
           />
@@ -108,7 +112,7 @@ export default function PositionSizeCalculator() {
             onChange={(e) => {
               const regex = /^-?[0-9]*\.?[0-9]*$/;
               if (regex.test(e.target.value)) {
-                setStopLoss(parseFloat(e.target.value));
+                setStopLoss(e.target.value);
               }
             }}
           />
@@ -119,10 +123,10 @@ export default function PositionSizeCalculator() {
           type="button"
           className="w-full rounded-md border border-teal-700 bg-white px-4 py-2 text-sm font-semibold text-teal-700 shadow-sm hover:bg-teal-200 hover:text-teal-800"
           onClick={() => {
-            setCapital(0);
-            setRisk(0);
-            setEntryPrice(0);
-            setStopLoss(0);
+            setCapital("0");
+            setRisk("0");
+            setEntryPrice("0");
+            setStopLoss("0");
             setCalculationResult({
               riskAmount: 0,
               riskPerShare: 0,

@@ -10,8 +10,8 @@ interface SelectProps {
   label?: string;
   id?: string;
   options: SelectOption[];
-  value: string;
-  onChange: (value: string) => void;
+  value: string | number;
+  onChange: (value: string | number) => void;
   placeholder?: string;
   className?: string;
   error?: string;

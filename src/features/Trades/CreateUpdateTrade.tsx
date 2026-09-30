@@ -13,7 +13,7 @@ import { useGetAllStrategies } from "@/hooks/useStrategy";
 import { useGetTradeById, useSaveTrade, useUpdateTrade } from "@/hooks/useTrade";
 import useUserStore from "@/store/UserStore";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaArrowLeft, FaChartLine, FaRocket, FaShieldAlt } from "react-icons/fa";
 
@@ -32,7 +32,7 @@ interface TradeFormValues {
   totalPnl: number;
   tradeStatus: string;
   result: string;
-  strategy: string;
+  strategy: number;
   rulesFollowed: string[];
   notes: string;
   tradeImg: string;
@@ -94,17 +94,20 @@ export default function CreateUpdateTrade() {
   } = useGetTradeById({ tradeId: selectedTradeID, userId: UserID });
   const loading = isLoadingRules || isLoadingStrategies || (isEditing && (tradeIsPending || tradeIsFetching));
 
+  
   const ruleOptions =
-    Rules?.rules?.map((rule: RuleItem) => ({
-      value: rule.id,
-      label: rule.rule,
-    })) ?? [];
-
+  Rules?.rules?.map((rule: RuleItem) => ({
+    value: rule.id,
+    label: rule.rule,
+  })) ?? [];
+  
   const strategyOptions =
-    Strategies?.strategies?.map((strategy: any) => ({
-      value: strategy.id,
-      label: strategy.name,
-    })) ?? [];
+  Strategies?.strategies?.map((strategy: any) => ({
+    value: strategy.id,
+    label: strategy.name,
+  })) ?? [];
+  console.log(Strategies?.strategies)
+    
 
   const {
     control,
@@ -127,61 +130,49 @@ export default function CreateUpdateTrade() {
       totalPnl: 0,
       tradeStatus: "",
       result: "",
-      strategy: "",
+      strategy: 0,
       rulesFollowed: [],
       notes: "",
       tradeImg: "",
     },
   });
+  const initializedTradeId = useRef(0);
 
   useEffect(() => {
-    if(selectedTradeID > 0 && tradeData) {
-      console.log("Resetting form with trade data:");
-      reset({
-        entryDate: tradeData.entryDate,
-        fromDate: tradeData.fromDate,
-        toDate: tradeData.toDate,
-        tradeType: tradeData.tradeType,
-        instrumentType: tradeData.instrumentType,
-        position: tradeData.position,
-        capitalUsed: tradeData.capitalUsed,
-        entryPrice: tradeData.entryPrice,
-        exitPrice: tradeData.exitPrice,
-        qty: tradeData.qty,
-        riskReward: tradeData.riskReward,
-        totalPnl: tradeData.totalPnl,
-        tradeStatus: tradeData.tradeStatus,
-        result: tradeData.result,
-        strategy: tradeData.strategy,
-        rulesFollowed: tradeData.rulesFollowed,
-        notes: tradeData.notes,
-        tradeImg: tradeData.tradeImg
-      })
-    } else{
-      console.log("Resetting form with default values:");
-
-      reset({
-        entryDate: "",
-        fromDate: "",
-        toDate: "",
-        tradeType: "",
-        instrumentType: "",
-        position: "",
-        capitalUsed: 0,
-        entryPrice: 0,
-        exitPrice: 0,
-        qty: 0,
-        riskReward: 0,
-        totalPnl: 0,
-        tradeStatus: "",
-        result: "",
-        strategy: "",
-        rulesFollowed: [],
-        notes: "",
-        tradeImg: ""
-      })
+    if (selectedTradeID === 0) {
+      if (initializedTradeId.current !== 0) {
+        reset();
+        initializedTradeId.current = 0;
+      }
+      return;
     }
-  }, [tradeData, reset, selectedTradeID])
+
+    if (!tradeData || initializedTradeId.current === selectedTradeID) {
+      return;
+    }
+
+    reset({
+        entryDate: tradeData?.trade?.entryDate,
+        fromDate: tradeData?.trade?.fromDate,
+        toDate: tradeData?.trade?.toDate,
+        tradeType: tradeData?.trade?.tradeType,
+        instrumentType: tradeData?.trade?.instrumentType,
+        position: tradeData?.trade?.position,
+        capitalUsed: tradeData?.trade?.capitalUsed,
+        entryPrice: tradeData?.trade?.entryPrice,
+        exitPrice: tradeData?.trade?.exitPrice,
+        qty: tradeData?.trade?.qty,
+        riskReward: tradeData?.trade?.riskReward,
+        totalPnl: tradeData?.trade?.totalPnl,
+        tradeStatus: tradeData?.trade?.tradeStatus,
+        result: tradeData?.trade?.result,
+        strategy: tradeData?.trade?.strategy,
+        rulesFollowed: tradeData?.trade?.rulesFollowed,
+        notes: tradeData?.trade?.notes,
+        tradeImg: tradeData?.trade?.tradeImg
+    });
+    initializedTradeId.current = selectedTradeID;
+  }, [tradeData, reset, selectedTradeID]);
 
   function onSubmit(data: TradeFormValues) {
     console.log(data);
